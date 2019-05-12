@@ -1,0 +1,27 @@
+{% extends "__base.html" %}
+
+{% block title %}223C project{% endblock %}
+
+{% block body %}
+<div id ="app">
+    <div class="container">
+        <div class="row">
+            <h2>223C final project</h2>
+        </div>
+        <hr/>
+        <div v-show="error" class="alert alert-danger">${ error }</div>
+        <div class="row">
+            <div class="col-md-3">
+                <form v-on:submit.prevent="query()">
+                    <input ref="file" v-on:change="updateImageFile()" type="file" accept="image/png">
+                    <input type="submit" class="btn btn-success" value="Submit" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/index.js"></script>
+{% endblock %}
