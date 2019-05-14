@@ -20,15 +20,15 @@ var app = new Vue({
                 return;
             }
             var form_data = new FormData();
-            form_data.append("file", this.file);
-            axios.post("/api/query-file", form_data, {
+            form_data.append("file", this.image_file);
+            axios.post("/api/query-image", form_data, {
                 headers: {
-                    "Content-type": "multipart/form-data",
+                    "Content-Type": "multipart/form-data",
                 },
             }).then(function(response) {
                 that.results = response.data;
             }, function(err) {
-                that.error = response.data;
+                that.error = err.data;
             });
         },
         updateImageFile: function() {
