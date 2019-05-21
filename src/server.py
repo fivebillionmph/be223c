@@ -1,6 +1,6 @@
 import sqlite3
 from mod.helper import sqlite_dict_factory
-from flask import Flask, render_template, jsonify, send_file, request, Response
+from flask import Flask, render_template, jsonify, send_file, request, Response, send_from_directory
 from PIL import Image
 import cv2
 import numpy as np
@@ -31,7 +31,15 @@ def route_api_query_image():
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
     prob = model_prob(img)
     similarities = similar_images(img)
-    return jsonify([img.shape[0], img.shape[1]])
+    res = {
+        "probability": prob,
+        "similar_images": similarities,
+    }
+    return jsonify(res)
+
+@app.route("/similar-images/<path:filename>")
+def route_similar_images(filename):
+    return send_from_directory("../data/similar-images-test", filename)
 
 @app.route("/")
 def route_index():
