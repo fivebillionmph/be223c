@@ -5,7 +5,7 @@ var app = new Vue({
     delimiters: ["${", "}"],
     data: {
         image_file: null,
-        results: null,
+        result: null,
         error: null,
     },
     methods: {
@@ -15,6 +15,7 @@ var app = new Vue({
         query: function() {
             var that = this;
             this.resetError();
+            this.result = null;
             if(this.image_file === null) {
                 this.error = "Please select a file first";
                 return;
@@ -26,7 +27,15 @@ var app = new Vue({
                     "Content-Type": "multipart/form-data",
                 },
             }).then(function(response) {
-                that.results = response.data;
+                that.result = response.data;
+                that.result.similar_images.sort(function(a, b) {
+                    if(b.similarity > a.similarity) {
+                        return 1;
+                    } else if(b.similarity < a.similarity) {
+                        return -1;
+                    }
+                    return 0;
+                });
             }, function(err) {
                 that.error = err.data;
             });
