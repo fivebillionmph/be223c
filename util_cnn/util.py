@@ -31,6 +31,46 @@ def bbox(img):
 
     return rmin, rmax, cmin, cmax
 
+def rotate(image, angle, center=None, scale=1.0):
+    # grab the dimensions of the image
+    (h, w) = image.shape[:2]
+
+    # if the center is None, initialize it as the center of
+    # the image
+    if center is None:
+        center = (w // 2, h // 2)
+
+    # perform the rotation
+    M = cv2.getRotationMatrix2D(center, angle, scale)
+    rotated = cv2.warpAffine(image, M, (w, h))
+
+    # return the rotated image
+    return rotated
+
+def rotate_bound(image, angle):
+    # grab the dimensions of the image and then determine the
+    # center
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w // 2, h // 2)
+
+    # grab the rotation matrix (applying the negative of the
+    # angle to rotate clockwise), then grab the sine and cosine
+    # (i.e., the rotation components of the matrix)
+    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+
+    # compute the new bounding dimensions of the image
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+
+    # adjust the rotation matrix to take into account translation
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+
+    # perform the actual rotation and return the image
+    return cv2.warpAffine(image, M, (nW, nH))
+
 def read_label(csv_file):
     # read image name and store in list
 
@@ -73,11 +113,12 @@ def read_image(file_name_list, image_src_path, size, norm=True, crop=False):
     
     return image_list
 
-def read_data(label_path,image_folder_path,input_size,split_ratio,split_by_id=True,normalize=True,crop_image=False):
+def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,split_by_id=True,normalize=True,crop_image=False):
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
     print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
     
     image_list = read_image(file_name_list, image_folder_path, input_size, norm=normalize, crop=crop_image)  
+    angleInc = round(180/aug_rotate)
 
     train_img = list()
     train_label = list()
@@ -87,12 +128,19 @@ def read_data(label_path,image_folder_path,input_size,split_ratio,split_by_id=Tr
         train_id, val_id = train_test_split( pid_list, test_size=split_ratio, random_state=42)
         for pid in train_id:
             for ind in pid_file_dict[pid]:
-                train_img.append( img_to_array(image_list[ind]) )
-                train_label.append( prog_list[ind] )
+                im = image_list[ind]
+                for ang in range(0,180,angleInc):
+                    im_rot = rotate(im, ang)
+                    train_img.append( img_to_array(im_rot) )
+                    train_label.append( prog_list[ind] )
+
         for pid in val_id:
             for ind in pid_file_dict[pid]:
-                val_img.append( img_to_array(image_list[ind]) )
-                val_label.append( prog_list[ind] )
+                im = image_list[ind]
+                for ang in range(0,180,angleInc):
+                    im_rot = rotate(im, ang)
+                    val_img.append( img_to_array(im_rot) )
+                    val_label.append( prog_list[ind] )
         print('Split dataset according to Patients. Training : {} patients and {} images; Validation : {} patients and {} images'.format( 
             len(train_id),len(train_img),len(val_id),len(val_img) ))
     else:
@@ -126,7 +174,7 @@ if __name__ == "__main__":
     # read_data(csvPath,imagePath,inputSize,0.3,split_by_id=True,normalize=True,crop_image=False)
 
     train_img,train_label,val_img,val_label = read_data(csvPath,
-        imagePath,inputSize,0.3,split_by_id=True,normalize=True,crop_image=False)
+        imagePath,inputSize,0.2,split_by_id=True,normalize=True,crop_image=False)
         
-
+    pass
     # print(type(train_img[5])) 
