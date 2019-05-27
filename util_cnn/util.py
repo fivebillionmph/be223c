@@ -6,6 +6,7 @@ from os.path import join
 from sklearn.model_selection import train_test_split
 from operator import itemgetter
 from keras.preprocessing.image import img_to_array
+from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
 
 
@@ -176,14 +177,69 @@ def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,s
 
     return train_img_np,train_label_np,val_img_np,val_label_np
 
-# def read_csv_kfold()
+def read_data_kfold_(label_path,image_folder_path,input_size,aug_rotate=6,kfold=5,normalize=True,crop_image=False):
+    ## it will split the dataset only according to the patient id in k-fold manner
+    ## for each image, it will do manual augmentation by rotation
+    ## crop is optional and with risk that it may lose some important corners
+    ## most of the parameters are defined in the same way as read_data()
+    
+    
+    file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
+    print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
+    
+    image_list = read_image(file_name_list, image_folder_path, input_size, norm=normalize, crop=crop_image)  
+    angleInc = round(180/aug_rotate)
+
+    train_img_kfold = list()
+    train_label_kfold = list()
+    val_img_kfold = list()
+    val_label_kfold = list()
+
+    kf = KFold(n_splits=kfold)
+    pid_list = np.array(pid_list)
+    for train_id_index, val_id_index in kf.split(pid_list):
+        train_id, val_id = pid_list[train_id_index], pid_list[val_id_index]
+        train_img = list()
+        train_label = list()
+        val_img = list()
+        val_label = list()
+        for pid in train_id:
+            for ind in pid_file_dict[pid]:
+                im = image_list[ind]
+                for ang in range(0,180,angleInc):
+                    im_rot = rotate(im, ang)
+                    train_img.append( img_to_array(im_rot) )
+                    train_label.append( prog_list[ind] )
+        for pid in val_id:
+            for ind in pid_file_dict[pid]:
+                im = image_list[ind]
+                for ang in range(0,180,angleInc):
+                    im_rot = rotate(im, ang)
+                    val_img.append( img_to_array(im_rot) )
+                    val_label.append( prog_list[ind] )
+        train_img_kfold.append( np.array(train_img) )
+        train_label_kfold.append( np.array(train_label) )
+        val_img_kfold.append( np.array(val_img) )
+        val_label_kfold.append( np.array(val_label) )
+
+    train_img_kfold_np = np.array(train_img_kfold)
+    train_label_kfold_np = np.array(train_label_kfold)
+    val_img_kfold_np = np.array(val_img_kfold)
+    val_label_kfold_np = np.array(val_label_kfold)
+
+    # print('Split dataset according to Patients. Training : {} patients and {} images; Validation : {} patients and {} images'.format( 
+    #     len(train_id),len(train_img),len(val_id),len(val_img) ))
+    return train_img_kfold_np, train_label_kfold_np, val_img_kfold_np, val_label_kfold_np
+
+
+
 
 def cosine_similarity(vec1, vec2):
     return np.dot(vec1, vec2) / (np.sqrt(np.dot(vec1, vec1)) * np.sqrt(np.dot(vec2, vec2)))
 
 
 if __name__ == "__main__":
-    csvPath = '../Master.csv'
+    csvPath = '../Master3.csv'
     imagePath = '../Seg'
     inputSize = (227,227)
 
@@ -193,8 +249,11 @@ if __name__ == "__main__":
 
     # read_data(csvPath,imagePath,inputSize,0.3,split_by_id=True,normalize=True,crop_image=False)
 
-    train_img,train_label,val_img,val_label = read_data(csvPath,
-        imagePath,inputSize,0.2,split_by_id=False,normalize=True,crop_image=True)
-        
+    # train_img,train_label,val_img,val_label = read_data(csvPath,
+    #     imagePath,inputSize,0.2,split_by_id=False,normalize=True,crop_image=True)
+
+    train_img_kfold, train_label_kfold, val_img_kfold, val_label_kfold = read_data_kfold_(csvPath,
+        imagePath,inputSize,aug_rotate=1,kfold=5,normalize=True,crop_image=False)
+
     pass
     # print(type(train_img[5])) 
