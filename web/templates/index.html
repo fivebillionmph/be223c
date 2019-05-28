@@ -23,6 +23,8 @@
                 </form>
                 <div v-if="result">
                     <h4>Probability: ${ result.probability }</h4>
+                    <h4>Filtered image:</h4>
+                    <img class="img-responsive similar-img" v-bind:src="'data:image/png;base64,' + result.filtered_img" />
                 </div>
             </div>
             <div class="col-md-3">
