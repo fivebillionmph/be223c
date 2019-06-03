@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from operator import itemgetter
 from keras.preprocessing.image import img_to_array
 from sklearn.model_selection import KFold
+from scipy import ndimage
 import matplotlib.pyplot as plt
 
 
@@ -91,33 +92,450 @@ def read_label(csv_file):
     # print(pid_list)
     return file_name_list,prog_list,pid_list,pid_file_dict
 
-def read_image(file_name_list, image_src_path, size, norm=True, crop=False):
+# read all images and masks according to csvfile 
+
+# OUTPUT: 
+#       image_list: (list) list of numpy arrays of image with specified size
+#       mask_list: (list) list of numpy arrays of mask with specified size  
+def read_image(file_name_list, image_src_path, mask_src_path, size):
+ 
     image_list = list()
+    mask_list = list()
 
     for f in file_name_list:
         img = cv2.imread( join(image_src_path,(f+'.png')) , cv2.IMREAD_GRAYSCALE)
+        mask = cv2.imread( join(mask_src_path,(f+'.png')) , cv2.IMREAD_GRAYSCALE)
         
-        if crop:
-            rmin, rmax, cmin, cmax = bbox(img)
-            if rmax-rmin > cmax-cmin:
-                mid = 0.5*(cmin+cmax)
-                cmax = int(mid + 0.5*(rmax-rmin))
-                cmin = int(mid - 0.5*(rmax-rmin))
-            else:
-                mid = 0.5*(rmin+rmax)
-                rmax = int(mid + 0.5*(cmax-cmin))
-                rmin = int(mid - 0.5*(cmax-cmin))
-            img_rz = cv2.resize(img[rmin:rmax, cmin:cmax], (size[1],size[0]))
-        else:
-            img_rz = cv2.resize(img, (size[1],size[0]))
-
-        if norm:
-            img_rz = normalize(img_rz)
+        img_rz = cv2.resize(img, (size[1],size[0]))
+        mask_rz = cv2.resize(mask, (size[1],size[0]))
+        
+        img_rz = normalize(img_rz)
+        mask_rz = np.float64( mask_rz>0.5 ) 
         
         image_list.append(img_rz)
-    
-    return image_list
+        mask_list.append(mask_rz)
 
+    return image_list, mask_list
+
+
+## Simply replicate labels by n times
+def augment_label(label, n):
+    return [label]*n
+
+
+
+## rotate the images n times and wrap them in a list, rotation will crop corners
+## INPUT: 
+##      image ( row x col)
+## OUTPUT: 
+##      list (n) with each element as (row x col)
+def augment_rotate(img, n):
+
+    
+    aug_patch = list()
+
+    angle_step = round(180/n) 
+    for ang in range(0,180,angle_step):
+        img_rot = rotate(img, ang)
+        aug_patch.append( img_rot )
+    
+    return aug_patch
+
+## INPUT:
+##      mask: numpy array 2d 
+## OUTPUT:
+##      coordianates: tuple (row,col)
+def find_leision_coordiates(mask):
+
+
+    row,col = ndimage.measurements.center_of_mass(mask) 
+
+    return (int(row), int(col))  
+
+## extract patch from image according to coordinates
+## INPUT
+##      img: numpy array (M,N) 
+##      coor: tuple (row,col) 
+##      patch_size: int (has to be smaller than img)
+## OUTPUT
+##      patch: numpy array (patch_size,patch_size)
+def extract_patch(img,coor,patch_size):
+
+    rmax, cmax = img.shape
+
+    row, col = coor
+    r1 = row - round( 0.5*(patch_size[0]) )
+    r2 = r1 + patch_size[0]
+    c1 = col - round( 0.5*(patch_size[1]) )
+    c2 = c1 + patch_size[1]
+
+    if r1 < 0:
+        r1 = 0
+        r2 = patch_size[0]
+    elif r2 > rmax:
+        r1 = rmax - patch_size[0]
+        r2 = rmax
+    
+    if c1 < 0:
+        c1 = 0
+        c2 = patch_size[1]
+    elif c2 > cmax:
+        c1 = cmax - patch_size[1]
+        c2 = cmax
+    
+    return img[r1:r2,c1:c2]
+
+## extract patch from image according to coordinates (rewrite of extract_patch())
+## INPUT
+##      img: numpy array (M,N) 
+##      coor: tuple (row,col) 
+##      patch_size: int (has to be smaller than img)
+## OUTPUT
+##      patch: numpy array (patch_size,patch_size)
+def generate_patch_from_img(img,coor,patch_size):
+    
+    return extract_patch(img, coor, patch_size)
+
+
+
+## Augment the patches with random view sampling
+##      Shifting, Rotating, Scaling
+## INPUT
+##      img: numpy array (M,N) 
+##      coor: tuple (row,col) 
+##      patch_size: int (has to be smaller than img)
+## OUTPUT
+##      patch_list: list (including N patches)
+##      N: int (augmentation times)
+def generate_path_from_img_random_views(img,coor,patch_size):
+    
+    
+    shift_step = round(0.2 * patch_size[0])
+    shifting_r =  [-shift_step, 0, shift_step]
+    shifting_c = [-shift_step, 0, shift_step]
+    rotating = [0, 36, 72, 108, 144]
+    scaling = [0.7, 1.0, 1.3]
+    Nt = len(shifting_r) * len(shifting_c)
+    Nr = len(rotating)
+    Ns = len(scaling)
+    N = Nt*Nr*Ns
+
+
+    r0,c0 = coor
+
+    patch_list = list()
+
+    for dr in shifting_r:
+        r = r0 + dr
+        for dc in shifting_c:
+            c = c0 + dc
+            for ro in rotating:
+                for sc in scaling:
+                    img_transform = rotate(img, ro, center=(c,r), scale=sc)
+                    patch_list.append( extract_patch(img_transform,(r,c),patch_size) )
+
+    
+    return patch_list, N
+
+
+
+## read data for proposed unet-based method
+##      No option for K-Fold; No option for RBG/gra output (one channel in default); 
+##      Split on patient ID; Augmentation: rotation(crop corners)
+
+## OUTPUT
+##      numpy array: train_img (N x row x col x 1), train_mask (N x row x col x 1), train_label (N,)
+##      numpy array: val_img (N x row x col x 1), val_mask (N x row x col x 1), val_label (N,)
+def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,split_ratio=0.2,aug_rotate=6):
+
+
+    ## read all the data
+    file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
+    print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
+    
+    image_list, mask_list = read_image(file_name_list, image_folder_path, mask_folder_path, input_size)
+    print('Images loaded: {}; Masks loaded: {}'.format( len(image_list), len(mask_list) ))
+
+    ## define data capacities
+    train_img = list()
+    train_mask = list()
+    train_label = list()
+    val_img = list()
+    val_mask = list()
+    val_label = list()
+
+    ## split on patient id and query image according to pid_file_dict
+    ## augmentation with rotation
+    train_id, val_id = train_test_split( pid_list, test_size=split_ratio, random_state=42)
+    for pid in train_id:
+        for ind in pid_file_dict[pid]:
+            train_img += augment_rotate(image_list[ind], aug_rotate)
+            train_mask += augment_rotate(mask_list[ind], aug_rotate)
+            train_label += augment_label(prog_list[ind], aug_rotate)  
+
+    for pid in val_id:
+        for ind in pid_file_dict[pid]:
+            val_img += augment_rotate(image_list[ind], aug_rotate)
+            val_mask += augment_rotate(mask_list[ind], aug_rotate)
+            val_label += augment_label(prog_list[ind], aug_rotate)  
+
+
+    print('Split dataset according to Patients. Training : {} patients and {} images; Validation : {} patients and {} images'.format( 
+        len(train_id),len(train_img),len(val_id),len(val_img) ))
+
+    train_img = np.expand_dims(np.array(train_img), axis=-1)
+    train_mask = np.expand_dims(np.array(train_mask), axis=-1)
+    train_label = np.array(train_label)
+
+    val_img = np.expand_dims(np.array(val_img), axis=-1)
+    val_mask = np.expand_dims(np.array(val_mask), axis=-1)
+    val_label = np.array(val_label)
+
+    return train_img, train_mask, train_label, val_img, val_mask, val_label    
+
+
+
+## read data for proposed dual input VGG 16 method
+##      kfold: 1,2,3,4,5...
+##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
+##      Split on patient ID; Augmentation: rotation(crop corners)
+
+## OUTPUT
+##      if not KFold:
+##      numpy array: train_img1 (N x row1 x col1 x outchannels), train_img2 (N x row2 x col2 x outchannels), train_label (N,)
+##      numpy array: val_img1 (N x row1 x col1 x outchannels), val_img2 (N x row2 x col2 x outchannels), val_label (N,)
+##      if KFold:
+##      numpy array: train_img1 (K x N x row1 x col1 x outchannels), train_img2 (K x N x row2 x col2 x outchannels), train_label (K, N)
+##      numpy array: val_img1 (K x N x row1 x col1 x outchannels), val_img2 (K x N x row2 x col2 x outchannels), val_label (K, N) 
+def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3):
+    
+    ## read all the data
+    file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
+    print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
+    
+    image_list, mask_list = read_image(file_name_list, image_folder_path, mask_folder_path, input_size1)
+    print('Images loaded: {}; Masks loaded: {}'.format( len(image_list), len(mask_list) ))
+
+
+
+    if kfold > 1:
+        train_img1_kfold = list()
+        train_img2_kfold = list()
+        train_label_kfold = list()
+        val_img1_kfold = list()
+        val_img2_kfold = list()
+        val_label_kfold = list()
+
+        kf = KFold(n_splits=kfold)
+        pid_list = np.array(pid_list) # for convenient indexing 
+        for train_id_index, val_id_index in kf.split(pid_list):
+            train_id, val_id = pid_list[train_id_index], pid_list[val_id_index]
+            
+            train_img1 = list()
+            train_img2 = list()
+            train_label = list()
+            val_img1 = list()
+            val_img2 = list()
+            val_label = list()
+
+            for pid in train_id:
+                for ind in pid_file_dict[pid]:
+                    img_batch = augment_rotate(image_list[ind],aug_rotate)
+                    mask_batch = augment_rotate(mask_list[ind],aug_rotate)
+
+                    train_img1 += img_batch
+                    for i in range(len(img_batch)):
+                        train_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                    train_label += augment_label(prog_list[ind], aug_rotate)  
+
+            for pid in val_id:
+                for ind in pid_file_dict[pid]:
+                    img_batch = augment_rotate(image_list[ind],aug_rotate)
+                    mask_batch = augment_rotate(mask_list[ind],aug_rotate)
+
+                    val_img1 += img_batch
+                    for i in range(len(img_batch)):
+                        val_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                    val_label += augment_label(prog_list[ind], aug_rotate)  
+
+
+            train_img1_kfold.append( np.stack( [np.array(train_img1)] * outchannels, axis=-1 ) )
+            train_img2_kfold.append( np.stack( [np.array(train_img2)] * outchannels, axis=-1 ) )
+            train_label_kfold.append( np.array(train_label) )
+
+            val_img1_kfold.append( np.stack( [np.array(val_img1)] * outchannels, axis=-1 ) )
+            val_img2_kfold.append( np.stack( [np.array(val_img2)] * outchannels, axis=-1 ) )
+            val_label_kfold.append( np.array(val_label))
+
+        train_img1_kfold_np = np.array(train_img1_kfold)
+        train_img2_kfold_np = np.array(train_img2_kfold)
+        train_label_kfold_np = np.array(train_label_kfold)
+
+        val_img1_kfold_np = np.array(val_img1_kfold)
+        val_img2_kfold_np = np.array(val_img2_kfold)
+        val_label_kfold_np = np.array(val_label_kfold)
+        
+        return train_img1_kfold_np,train_img2_kfold_np,train_label_kfold_np,val_img1_kfold_np,val_img2_kfold_np,val_label_kfold_np
+
+    else:  # no kfold, kfold == 1
+
+        ## define data capacities           
+        train_img1 = list()
+        train_img2 = list()
+        train_label = list()
+        val_img1 = list()
+        val_img2 = list()
+        val_label = list()
+
+        ## split on patient id and query image according to pid_file_dict
+        ## augmentation with rotation
+        train_id, val_id = train_test_split( pid_list, test_size=split_ratio, random_state=42)
+        for pid in train_id:
+            for ind in pid_file_dict[pid]:
+                img_batch = augment_rotate(image_list[ind],aug_rotate)
+                mask_batch = augment_rotate(mask_list[ind],aug_rotate)
+
+                train_img1 += img_batch
+                for i in range(len(img_batch)):
+                    train_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                train_label += augment_label(prog_list[ind], aug_rotate)  
+
+
+        for pid in val_id:
+            for ind in pid_file_dict[pid]:
+                img_batch = augment_rotate(image_list[ind],aug_rotate)
+                mask_batch = augment_rotate(mask_list[ind],aug_rotate)
+
+                val_img1 += img_batch
+                for i in range(len(img_batch)):
+                    val_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                val_label += augment_label(prog_list[ind], aug_rotate)  
+        
+        train_img1_np =  np.stack( [np.array(train_img1)] * outchannels, axis=-1 ) 
+        train_img2_np =  np.stack( [np.array(train_img2)] * outchannels, axis=-1 ) 
+        train_label_np = np.array(train_label) 
+
+        val_img1_np =  np.stack( [np.array(val_img1)] * outchannels, axis=-1 ) 
+        val_img2_np =  np.stack( [np.array(val_img2)] * outchannels, axis=-1 ) 
+        val_label_np = np.array(val_label)
+
+        return train_img1_np,train_img2_np,train_label_np,val_img1_np,val_img2_np,val_label_np
+        
+
+
+
+## read data for proposed patch input VGG 16 with random view sampling method
+##      kfold: 1,2,3,4,5...
+##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
+##      Split on patient ID; Augmentation: random view sampling
+
+## OUTPUT
+##      if not KFold:
+##      numpy array: train_img (N x row x col x outchannels), train_label (N,)
+##      numpy array: val_img (N x row x col x outchannels), val_label (N,)
+##      if KFold:
+##      numpy array: train_img (K x N x row x col x outchannels),train_label (K, N)
+##      numpy array: val_img (K x N x row x col x outchannels), val_label (K, N) 
+def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,kfold=1,outchannels=3):
+    
+    ## read all the data
+    file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
+    print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
+    
+    image_list, mask_list = read_image(file_name_list, image_folder_path, mask_folder_path, input_size1)
+    print('Images loaded: {}; Masks loaded: {}'.format( len(image_list), len(mask_list) ))
+
+
+
+    if kfold > 1:
+        train_img_kfold = list()
+        train_label_kfold = list()
+        val_img_kfold = list()
+        val_label_kfold = list()
+
+        kf = KFold(n_splits=kfold)
+        pid_list = np.array(pid_list) # for convenient indexing 
+        for train_id_index, val_id_index in kf.split(pid_list):
+            train_id, val_id = pid_list[train_id_index], pid_list[val_id_index]
+            
+            train_img = list()
+            train_label = list()
+            val_img = list()
+            val_label = list()
+
+            for pid in train_id:
+                for ind in pid_file_dict[pid]:
+                    img = image_list[ind]
+                    coor = find_leision_coordiates(mask_list[ind])
+                    patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                    train_img += patch 
+                    train_label += augment_label(prog_list[ind], N)
+
+            for pid in val_id:
+                for ind in pid_file_dict[pid]:
+                    img = image_list[ind]
+                    coor = find_leision_coordiates(mask_list[ind])
+                    patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                    val_img += patch 
+                    val_label += augment_label(prog_list[ind], N)
+
+
+            train_img_kfold.append( np.stack( [np.array(train_img)] * outchannels, axis=-1 ) )
+            train_label_kfold.append( np.array(train_label) )
+
+            val_img_kfold.append( np.stack( [np.array(val_img)] * outchannels, axis=-1 ) )
+            val_label_kfold.append( np.array(val_label))
+
+        train_img_kfold_np = np.array(train_img_kfold)
+        train_label_kfold_np = np.array(train_label_kfold)
+
+        val_img_kfold_np = np.array(val_img_kfold)
+        val_label_kfold_np = np.array(val_label_kfold)
+        
+        return train_img_kfold_np, train_label_kfold_np, val_img_kfold_np, val_label_kfold_np
+
+    else:  # no kfold, kfold == 1
+
+        ## define data capacities           
+        train_img = list()
+        train_label = list()
+        val_img = list()
+        val_label = list()
+
+        ## split on patient id and query image according to pid_file_dict
+        ## augmentation with rotation
+        train_id, val_id = train_test_split( pid_list, test_size=split_ratio, random_state=42)
+        for pid in train_id:
+            for ind in pid_file_dict[pid]:
+                img = image_list[ind]
+                coor = find_leision_coordiates(mask_list[ind])
+                patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                train_img += patch 
+                train_label += augment_label(prog_list[ind], N)
+
+        for pid in val_id:
+            for ind in pid_file_dict[pid]:
+                img = image_list[ind]
+                coor = find_leision_coordiates(mask_list[ind])
+                patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                val_img += patch 
+                val_label += augment_label(prog_list[ind], N)
+        
+        train_img_np =  np.stack( [np.array(train_img)] * outchannels, axis=-1 ) 
+        train_label_np = np.array(train_label) 
+
+        val_img_np =  np.stack( [np.array(val_img)] * outchannels, axis=-1 ) 
+        val_label_np = np.array(val_label)
+
+        return train_img_np, train_label_np, val_img_np, val_label_np
+
+
+
+
+
+
+
+#######################################################################################
 def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,split_by_id=True,normalize=True,crop_image=False):
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
     print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
@@ -177,7 +595,7 @@ def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,s
 
     return train_img_np,train_label_np,val_img_np,val_label_np
 
-def read_data_kfold_(label_path,image_folder_path,input_size,aug_rotate=6,kfold=5,normalize=True,crop_image=False):
+def read_data_kfold(label_path,image_folder_path,input_size,aug_rotate=6,kfold=5,normalize=True,crop_image=False):
     ## it will split the dataset only according to the patient id in k-fold manner
     ## for each image, it will do manual augmentation by rotation
     ## crop is optional and with risk that it may lose some important corners
@@ -230,7 +648,7 @@ def read_data_kfold_(label_path,image_folder_path,input_size,aug_rotate=6,kfold=
     # print('Split dataset according to Patients. Training : {} patients and {} images; Validation : {} patients and {} images'.format( 
     #     len(train_id),len(train_img),len(val_id),len(val_img) ))
     return train_img_kfold_np, train_label_kfold_np, val_img_kfold_np, val_label_kfold_np
-
+#######################################################################################
 
 
 
@@ -242,18 +660,30 @@ if __name__ == "__main__":
     csvPath = '../Master3.csv'
     imagePath = '../Seg'
     inputSize = (227,227)
+    patchSize = (64,64)
 
 
-    # fileNameList,progList,pidList,pidFileDict = read_label(csvPath)   
-    # imageList = read_image(fileNameList, imagePath, inputSize, norm=True, crop=True) 
+    # for Unet segmentation training: 
+    a1,b1,c1,d1,e1,f1 = read_data_unet(csvPath,imagePath, imagePath, inputSize, split_ratio=0.2, aug_rotate=6)
+    print('Unet training data preparation:')
+    print('Training:', a1.shape, b1.shape, c1.shape)
+    print('Valiadation:', d1.shape, e1.shape, f1.shape)
 
-    # read_data(csvPath,imagePath,inputSize,0.3,split_by_id=True,normalize=True,crop_image=False)
+    # for dual inputs (original image and small patch of leision) training:
+    a2,b2,c2,d2,e2,f2 = read_data_dual_input(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3)
+    print('Dual inputs training data preparation:')
+    print('Training:', a2.shape, b2.shape, c2.shape)
+    print('Valiadation:', d2.shape, e2.shape, f2.shape)
 
-    # train_img,train_label,val_img,val_label = read_data(csvPath,
-    #     imagePath,inputSize,0.2,split_by_id=False,normalize=True,crop_image=True)
+    # for single input (small patch with random view sampling) training: 
+    a3,b3,c3,d3 = read_data_random_view(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,kfold=1,outchannels=3)
+    print('Random view sampling patch input training data preparation:')
+    print('Training:', a3.shape, b3.shape)
+    print('Valiadation:', c3.shape, d3.shape) 
+   
 
-    train_img_kfold, train_label_kfold, val_img_kfold, val_label_kfold = read_data_kfold_(csvPath,
-        imagePath,inputSize,aug_rotate=1,kfold=5,normalize=True,crop_image=False)
+    ## utility function for usage in testing and web backend
 
-    pass
-    # print(type(train_img[5])) 
+    ##find_leision_coordiates(mask)
+    ##generate_patch_from_img(img,coor,patch_size)
+    ##generate_path_from_img_random_views(img,coor,patch_size)
