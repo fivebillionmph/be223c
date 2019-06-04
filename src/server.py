@@ -4,11 +4,13 @@ import cv2
 import numpy as np
 from mod.model import Model
 from mod.similarity import similar_images
-from mod.preprocess import preprocess
+from mod import preprocess
+from mod import util
 from argparse import ArgumentParser
 import tensorflow as tf
 import base64
 from io import BytesIO
+import json
 
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -45,15 +47,22 @@ def img_to_base64(img):
 
 @app.route("/api/query-image", methods=["POST"])
 def route_api_query_image():
+    if not auth_check(request.authorization):
+        return auth_fail()
+    request_data = json.loads(request.form["data"])
     f = request.files["file"]
     pil_img = Image.open(f)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    filtered_img = preprocess(img)
+    filtered_img = preprocess.preprocess(img)
+    patch = util.extract_patch(filtered_img, (request_data["point"]["y"], request_data["point"]["x"]), preprocess.PATCH_SIZE)
+
     prob = g_model.prob(filtered_img)
     similarities = similar_images(filtered_img)
     img_b64 = img_to_base64(filtered_img)
+    patch_b64 = img_to_base64(patch)
     res = {
         "filtered_img": img_b64.decode("utf-8"),
+        "patch": patch_b64.decode("utf-8"),
         "probability": prob,
         "similar_images": similarities,
     }
@@ -61,12 +70,18 @@ def route_api_query_image():
 
 @app.route("/similar-images/<path:filename>")
 def route_similar_images(filename):
+    if not auth_check(request.authorization):
+        return auth_fail()
     return send_from_directory("../data/similar-images-test", filename)
 
 @app.route("/")
 def route_index():
     if not auth_check(request.authorization):
         return auth_fail()
-    return render_template("index.html")
+    page_data = {
+        "width": preprocess.WIDTH,
+        "height": preprocess.HEIGHT,
+    }
+    return render_template("index.html", data=page_data)
 
 main()

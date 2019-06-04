@@ -32,7 +32,11 @@ var app = new Vue({
                 return;
             }
             var form_data = new FormData();
+            var req_data = {
+                "point": this.image_point,
+            };
             form_data.append("file", this.image_file);
+            form_data.append("data", JSON.stringify(req_data));
             axios.post("/api/query-image", form_data, {
                 headers: {
                     "Content-Type": "multipart/form-data",

@@ -29,6 +29,8 @@
                     <h4>Probability: ${ result.probability }</h4>
                     <h4>Filtered image:</h4>
                     <img class="img-responsive similar-img" v-bind:src="'data:image/png;base64,' + result.filtered_img" />
+                    <h4>Patch</h4>
+                    <img class="img-responsive similar-img" v-bind:src="'data:image/png;base64,' + result.patch" />
                 </div>
             </div>
             <div class="col-md-3">
@@ -52,7 +54,7 @@
 {% block scripts %}
 <script>
     var globals = {
-        img_transform_size: [227, 227],
+        img_transform_size: [{{ data.width }}, {{ data.height }}],
     };
 </script>
 <script src="/static/js/index.js"></script>
