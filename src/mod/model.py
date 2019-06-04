@@ -9,5 +9,6 @@ class Model:
         self.graph = graph
 
     def prob(self, img):
+        return 1.0
         with self.graph.as_default():
             return float(self.model.predict(np.array([img]))[0][0])

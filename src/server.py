@@ -72,7 +72,7 @@ def route_api_query_image():
 def route_similar_images(filename):
     if not auth_check(request.authorization):
         return auth_fail()
-    return send_from_directory("../data/similar-images-test", filename)
+    return send_from_directory("../data/segs/patches", filename)
 
 @app.route("/")
 def route_index():

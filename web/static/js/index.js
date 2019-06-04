@@ -19,6 +19,7 @@ var app = new Vue({
             this.image_file = null;
             this.image_data = null;
             this.image_point = null;
+            this.result = null;
         },
         query: function() {
             var that = this;
