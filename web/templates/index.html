@@ -19,8 +19,12 @@
             <div class="col-md-6">
                 <form v-on:submit.prevent="query()">
                     <input ref="file" v-on:change="updateImageFile()" type="file" accept="image/png">
-                    <input type="submit" class="btn btn-success" value="Submit" />
+                    <input v-show="submitable()" type="submit" class="btn btn-success" value="Submit" />
                 </form>
+                <div v-show="image_data">
+                    <h4 v-show="!image_point" class="text-danger">Select the node on the canvas</h4>
+                    <canvas id="canvas-image-region" v-bind:width="transform_size[0]" v-bind:height="transform_size[1]"></canvas>
+                </div>
                 <div v-if="result">
                     <h4>Probability: ${ result.probability }</h4>
                     <h4>Filtered image:</h4>
@@ -46,5 +50,10 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+    var globals = {
+        img_transform_size: [227, 227],
+    };
+</script>
 <script src="/static/js/index.js"></script>
 {% endblock %}
