@@ -658,28 +658,29 @@ def cosine_similarity(vec1, vec2):
 
 if __name__ == "__main__":
     csvPath = '../Master3.csv'
-    imagePath = '../Seg'
-    inputSize = (227,227)
-    patchSize = (64,64)
+    imagePath = '../PNG-v2'
+    maskPath = '../PNG-lung-seg'
+    inputSize = (256,256)
+    # patchSize = (64,64)
 
 
     # for Unet segmentation training: 
-    a1,b1,c1,d1,e1,f1 = read_data_unet(csvPath,imagePath, imagePath, inputSize, split_ratio=0.2, aug_rotate=6)
+    a1,b1,c1,d1,e1,f1 = read_data_unet(csvPath,imagePath, maskPath, inputSize, split_ratio=0.2, aug_rotate=6)
     print('Unet training data preparation:')
     print('Training:', a1.shape, b1.shape, c1.shape)
     print('Valiadation:', d1.shape, e1.shape, f1.shape)
 
-    # for dual inputs (original image and small patch of leision) training:
-    a2,b2,c2,d2,e2,f2 = read_data_dual_input(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3)
-    print('Dual inputs training data preparation:')
-    print('Training:', a2.shape, b2.shape, c2.shape)
-    print('Valiadation:', d2.shape, e2.shape, f2.shape)
+    # # for dual inputs (original image and small patch of leision) training:
+    # a2,b2,c2,d2,e2,f2 = read_data_dual_input(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3)
+    # print('Dual inputs training data preparation:')
+    # print('Training:', a2.shape, b2.shape, c2.shape)
+    # print('Valiadation:', d2.shape, e2.shape, f2.shape)
 
-    # for single input (small patch with random view sampling) training: 
-    a3,b3,c3,d3 = read_data_random_view(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,kfold=1,outchannels=3)
-    print('Random view sampling patch input training data preparation:')
-    print('Training:', a3.shape, b3.shape)
-    print('Valiadation:', c3.shape, d3.shape) 
+    # # for single input (small patch with random view sampling) training: 
+    # a3,b3,c3,d3 = read_data_random_view(csvPath,imagePath,imagePath,inputSize,patchSize,split_ratio=0.2,kfold=1,outchannels=3)
+    # print('Random view sampling patch input training data preparation:')
+    # print('Training:', a3.shape, b3.shape)
+    # print('Valiadation:', c3.shape, d3.shape) 
    
 
     ## utility function for usage in testing and web backend
