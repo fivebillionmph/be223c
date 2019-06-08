@@ -40,6 +40,10 @@
                         <tbody>
                             <tr v-for="image in result.similar_images">
                                 <td><strong>${ image.similarity }</strong></td>
+                                <td>
+                                    <span v-show="image.response">Responds to immunotherapy</span>
+                                    <span v-show="!image.response">No response to immunotherapy</span>
+                                </td>
                                 <td><img class="img-responsive similar-img" v-bind:src="'/similar-images/' + image.name" /></td>
                             </tr>
                         </tbody>

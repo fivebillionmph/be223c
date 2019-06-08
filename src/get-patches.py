@@ -29,7 +29,7 @@ def main():
         #image = preprocess.preprocess(image)
         #print(cf, patch_coords, image.shape)
         patch = util.extract_patch(np.array(image), patch_coords, preprocess.PATCH_SIZE)
-        patch_image = Image.fromarray(np.uint8(patch * 255)).convert("L")
+        patch_image = Image.fromarray(np.uint8(patch)).convert("L")
         patch_image.save(opj(out_dir, cf + ".png"), "PNG")
         #image = Image.fromarray(np.array(image * 255)).convert("L")
         #image.save(opj(out_dir, cf + ".png"), "PNG")
