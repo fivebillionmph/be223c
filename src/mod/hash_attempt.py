@@ -24,7 +24,7 @@ class ImageSimilarity:
         self.paths = []
         self.hashes = []
         
-        print("%.0f pictures found in root directory" % len(os.listdir(images_dir)))
+        #print("%.0f pictures found in root directory" % len(os.listdir(images_dir)))
         
         for i in range(len(os.listdir(images_dir))):
             path = os.path.join(images_dir, os.listdir(images_dir)[i])
@@ -39,7 +39,7 @@ class ImageSimilarity:
      
             h = imagehash.dhash(im)
             self.hashes.append(h)
-            print("Getting image: %s \t Generating dhash: %s" % (os.listdir(images_dir)[i], h))
+            #print("Getting image: %s \t Generating dhash: %s" % (os.listdir(images_dir)[i], h))
     
     def query_image(self, image):
         """ image_hash = hashing_func(processing_func(image))
@@ -75,8 +75,8 @@ class ImageSimilarity:
         query_h = imagehash.dhash(Image.fromarray(query))
         query_ph = imagehash.phash(Image.fromarray(query))
         
-        print("Query image dhash is: %s" % query_h)
-        print("Query image phash is: %s \n" % query_ph)
+        #print("Query image dhash is: %s" % query_h)
+        #print("Query image phash is: %s \n" % query_ph)
 
         for i in range(len(self.hashes)):
         
@@ -86,16 +86,17 @@ class ImageSimilarity:
         kmeans = KMeans(n_clusters=2).fit(np.array(hash_differences).reshape(-1,1))
         centers = sorted(kmeans.cluster_centers_.flatten())
         threshold = np.mean(centers)
-        print("\n Kmeans threshold: %s \n" % str(threshold))
+        #print("\n Kmeans threshold: %s \n" % str(threshold))
 
         for i in range(len(hash_differences)):
             if hash_differences[i] < threshold:
                 matches.append(self.paths[i])
-                print("[Match] Image: %s \t hash difference: %s" % (self.paths[i][-13:], hash_differences[i]))
+                #print("[Match] Image: %s \t hash difference: %s" % (self.paths[i][-13:], hash_differences[i]))
     
         # if no match, output this message
         if not matches:
-            print("No images found")
+            #print("No images found")
+            pass
         else:
             # for images that fall within dhash threshold, try phash or Dice, Jaccard, Mutual information
             for j in range(len(matches)):
@@ -108,14 +109,14 @@ class ImageSimilarity:
                             
                 ph = imagehash.phash(im)
                 phashes.append(ph)
-                print("Getting image: %s \t Generating phash: %s" % (matches[j][-13:], ph))
+                #print("Getting image: %s \t Generating phash: %s" % (matches[j][-13:], ph))
         
                 diff = query_ph-ph
                 phash_differences.append(diff)
             
                 if diff < 10:
                     final_matches.append(matches[j])
-                    print("[Match] Image %s \t phash difference: %s" % (matches[j], phash_differences[j]))
+                    #print("[Match] Image %s \t phash difference: %s" % (matches[j], phash_differences[j]))
      
         if not final_matches:
             final_matches= matches
@@ -142,19 +143,19 @@ class ImageSimilarity:
             plt.imshow(im, cmap="gray")
             plt.axis("off")
             plt.show()
-            print(final_matches[k])
+            #print(final_matches[k])
             
             mi = mutual_info_score(query.flatten(), im.flatten())
             jac = jaccard_similarity_score(query.flatten(), im.flatten())
-            print("Mutual information: %.3f \t Jaccard score: %.3f" % (mi, jac))
+            #print("Mutual information: %.3f \t Jaccard score: %.3f" % (mi, jac))
 
-def process(img):
-    return img
-
-image = Image.open(r"C:\workspace\223C\Seg2\A08PR4015.png")
-image = np.array(image)
-
-test_dir = r"C:\workspace\223C\Seg2"
-
-test = ImageSimilarity(test_dir, process)
-test.query_image(image)
+#def process(img):
+#    return img
+#
+#image = Image.open(r"C:\workspace\223C\Seg2\A08PR4015.png")
+#image = np.array(image)
+#
+#test_dir = r"C:\workspace\223C\Seg2"
+#
+#test = ImageSimilarity(test_dir, process)
+#test.query_image(image)

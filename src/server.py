@@ -3,7 +3,7 @@ from PIL import Image
 import cv2
 import numpy as np
 from mod.model import Model
-from mod.similarity import similar_images
+from mod.hash_attempt import ImageSimilarity
 from mod import preprocess
 from mod import util
 from argparse import ArgumentParser
@@ -18,15 +18,20 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024 # max upload size 16 megabyt
 graph = tf.get_default_graph()
 
 def main():
-    global g_model
+    global g_data
+    g_data = {}
 
     args = get_args()
-    g_model = Model(args.m, graph)
+    g_data["model"] = Model(args.m, graph)
+    g_data["hash_dir"] = args.s
+    g_data["hash_similarity"] = ImageSimilarity(g_data["hash_dir"], preprocess.preprocess)
+
     app.run(host="0.0.0.0", port=8085)
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument("-m")
+    parser.add_argument("-m", help="neural network model file")
+    parser.add_argument("-s", help="hash files directory")
     args = parser.parse_args()
     return args
 
@@ -56,8 +61,8 @@ def route_api_query_image():
     filtered_img = preprocess.preprocess(img)
     patch = util.extract_patch(filtered_img, (request_data["point"]["y"], request_data["point"]["x"]), preprocess.PATCH_SIZE)
 
-    prob = g_model.prob(filtered_img)
-    similarities = similar_images(filtered_img)
+    prob = g_data["model"].prob(filtered_img)
+    similarities = g_data["hash_similarity"].query_image(filtered_img)
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
     res = {
@@ -72,7 +77,7 @@ def route_api_query_image():
 def route_similar_images(filename):
     if not auth_check(request.authorization):
         return auth_fail()
-    return send_from_directory("../data/segs/patches", filename)
+    return send_from_directory(g_data["hash_dir"], filename)
 
 @app.route("/")
 def route_index():
