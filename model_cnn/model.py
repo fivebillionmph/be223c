@@ -2,6 +2,7 @@ from keras.models import Sequential
 from keras.layers import Input, Add, ZeroPadding2D, Dense, Activation, Conv2D, MaxPooling2D, Dropout, Flatten, BatchNormalization, GlobalAveragePooling2D, AveragePooling2D, Concatenate, Conv2DTranspose
 from keras import backend as K
 from keras import Model
+from keras.applications.vgg16 import VGG16
 from keras.initializers import glorot_uniform
 # from keras.applications.resnet50 import ResNet50
 # from keras.applications.densenet import DenseNet121
@@ -72,12 +73,31 @@ def createModel_Unet(row,col,depth):
 
     return model
 
+def vgg16_classify(row, col, depth):
+    
+    input_shape = (row, col, depth)
 
+    conv_base = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
+
+    for layer in conv_base.layers[:-4]:
+        layer.trainable = False
+    
+    model = Sequential()
+    model.add(conv_base)
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.1))
+    model.add(Dense(1, activation='sigmoid'))
+
+    return model
 
 if __name__ == "__main__":
     # model = createModel(256,256,3,2)
     # model = createModel_AlexNet(227,227,1,2)
     # model = createModel_ResNet18(229,229,1,2)
     # model = createModel_DensNet(224,224,1,2)
-    model = createModel_Unet(256,256,1)
+    # model = createModel_Unet(256,256,1)
+    model = vgg16_classify(64,64,3)
     print(model.summary())
+    a = model.inputs
+    print(model.inputs)

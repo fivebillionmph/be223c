@@ -145,7 +145,7 @@ def augment_rotate(img, n):
 ##      mask: numpy array 2d 
 ## OUTPUT:
 ##      coordianates: tuple (row,col)
-def find_leision_coordiates(mask):
+def find_lesion_coordiates(mask):
 
 
     row,col = ndimage.measurements.center_of_mass(mask) 
@@ -207,7 +207,7 @@ def generate_patch_from_img(img,coor,patch_size):
 ## OUTPUT
 ##      patch_list: list (including N patches)
 ##      N: int (augmentation times)
-def generate_path_from_img_random_views(img,coor,patch_size):
+def generate_patch_from_img_random_views(img,coor,patch_size):
     
     
     shift_step = round(0.2 * patch_size[0])
@@ -238,7 +238,7 @@ def generate_path_from_img_random_views(img,coor,patch_size):
     return patch_list, N
 
 
-
+def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,split_ratio=0.2,aug_rotate=6):
 ## read data for proposed unet-based method
 ##      No option for K-Fold; No option for RBG/gra output (one channel in default); 
 ##      Split on patient ID; Augmentation: rotation(crop corners)
@@ -246,7 +246,7 @@ def generate_path_from_img_random_views(img,coor,patch_size):
 ## OUTPUT
 ##      numpy array: train_img (N x row x col x 1), train_mask (N x row x col x 1), train_label (N,)
 ##      numpy array: val_img (N x row x col x 1), val_mask (N x row x col x 1), val_label (N,)
-def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,split_ratio=0.2,aug_rotate=6):
+
 
 
     ## read all the data
@@ -295,6 +295,7 @@ def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,spli
 
 
 
+def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3):
 ## read data for proposed dual input VGG 16 method
 ##      kfold: 1,2,3,4,5...
 ##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
@@ -307,8 +308,8 @@ def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,spli
 ##      if KFold:
 ##      numpy array: train_img1 (K x N x row1 x col1 x outchannels), train_img2 (K x N x row2 x col2 x outchannels), train_label (K, N)
 ##      numpy array: val_img1 (K x N x row1 x col1 x outchannels), val_img2 (K x N x row2 x col2 x outchannels), val_label (K, N) 
-def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3):
-    
+# 
+#     
     ## read all the data
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
     print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
@@ -345,7 +346,7 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
                     train_img1 += img_batch
                     for i in range(len(img_batch)):
-                        train_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                        train_img2.append( generate_patch_from_img(img_batch[i], find_lesion_coordiates(mask_batch[i]), patch_size=input_size2))
                     train_label += augment_label(prog_list[ind], aug_rotate)  
 
             for pid in val_id:
@@ -355,7 +356,7 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
                     val_img1 += img_batch
                     for i in range(len(img_batch)):
-                        val_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                        val_img2.append( generate_patch_from_img(img_batch[i], find_lesion_coordiates(mask_batch[i]), patch_size=input_size2))
                     val_label += augment_label(prog_list[ind], aug_rotate)  
 
 
@@ -397,7 +398,7 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
                 train_img1 += img_batch
                 for i in range(len(img_batch)):
-                    train_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                    train_img2.append( generate_patch_from_img(img_batch[i], find_lesion_coordiates(mask_batch[i]), patch_size=input_size2))
                 train_label += augment_label(prog_list[ind], aug_rotate)  
 
 
@@ -408,7 +409,7 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
                 val_img1 += img_batch
                 for i in range(len(img_batch)):
-                    val_img2.append( generate_patch_from_img(img_batch[i], find_leision_coordiates(mask_batch[i]), patch_size=input_size2))
+                    val_img2.append( generate_patch_from_img(img_batch[i], find_lesion_coordiates(mask_batch[i]), patch_size=input_size2))
                 val_label += augment_label(prog_list[ind], aug_rotate)  
         
         train_img1_np =  np.stack( [np.array(train_img1)] * outchannels, axis=-1 ) 
@@ -424,6 +425,8 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
 
 
+
+def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,kfold=1,outchannels=3):
 ## read data for proposed patch input VGG 16 with random view sampling method
 ##      kfold: 1,2,3,4,5...
 ##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
@@ -436,8 +439,8 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 ##      if KFold:
 ##      numpy array: train_img (K x N x row x col x outchannels),train_label (K, N)
 ##      numpy array: val_img (K x N x row x col x outchannels), val_label (K, N) 
-def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,kfold=1,outchannels=3):
-    
+# 
+#    
     ## read all the data
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
     print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
@@ -466,16 +469,16 @@ def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_si
             for pid in train_id:
                 for ind in pid_file_dict[pid]:
                     img = image_list[ind]
-                    coor = find_leision_coordiates(mask_list[ind])
-                    patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                    coor = find_lesion_coordiates(mask_list[ind])
+                    patch,N = generate_patch_from_img_random_views(img,coor,input_size2)
                     train_img += patch 
                     train_label += augment_label(prog_list[ind], N)
 
             for pid in val_id:
                 for ind in pid_file_dict[pid]:
                     img = image_list[ind]
-                    coor = find_leision_coordiates(mask_list[ind])
-                    patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                    coor = find_lesion_coordiates(mask_list[ind])
+                    patch,N = generate_patch_from_img_random_views(img,coor,input_size2)
                     val_img += patch 
                     val_label += augment_label(prog_list[ind], N)
 
@@ -508,16 +511,16 @@ def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_si
         for pid in train_id:
             for ind in pid_file_dict[pid]:
                 img = image_list[ind]
-                coor = find_leision_coordiates(mask_list[ind])
-                patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                coor = find_lesion_coordiates(mask_list[ind])
+                patch,N = generate_patch_from_img_random_views(img,coor,input_size2)
                 train_img += patch 
                 train_label += augment_label(prog_list[ind], N)
 
         for pid in val_id:
             for ind in pid_file_dict[pid]:
                 img = image_list[ind]
-                coor = find_leision_coordiates(mask_list[ind])
-                patch,N = generate_path_from_img_random_views(img,coor,input_size2)
+                coor = find_lesion_coordiates(mask_list[ind])
+                patch,N = generate_patch_from_img_random_views(img,coor,input_size2)
                 val_img += patch 
                 val_label += augment_label(prog_list[ind], N)
         
@@ -530,6 +533,118 @@ def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_si
         return train_img_np, train_label_np, val_img_np, val_label_np
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## export the following functions
+
+
+def read_image_test(image_path, input_size):
+## read a single image
+##     image_path: string,the path to the single mask
+##     input_size: tuple, (row,col)
+
+##     return: numpy array(float64), the image
+
+## example
+
+##     image_path = '../img.png'
+##     input_size = (224,224)
+##     img = read_image_test(image_path, input_size)  
+
+
+
+    img = cv2.imread(image_path , cv2.IMREAD_GRAYSCALE)
+    img_rz = cv2.resize(img, (input_size[1],input_size[0]))
+
+    return normalize(img_rz)
+
+
+
+def read_mask_test(mask_path, input_size):
+## read a single mask
+##     image_path: string,the path to the single mask
+##     input_size: tuple, (row,col)
+
+##     return: numpy array(float64), the binary mask
+
+
+## example
+
+##     mask_path = '../mask.png'
+##     input_size = (224,224)
+##     mask = read_mask_test(mask_path, input_size)  
+    
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    mask_rz = cv2.resize(mask, (size[1],size[0]))
+    
+    return np.float64( mask_rz>0.5 )     
+
+
+
+
+def read_patch_test(img,mask,patch_size=(64,64)):
+## extract a patch from a image based on lesion mask
+##     img: numpy array, the lung image
+##     mask: numpy array, the lesion mask
+##     patch_size: tuple, (row,col)
+
+##     return: numpy array(float64), the patch
+
+
+## example
+
+##     image_path = '../img.png'
+##     input_size = (224,224)
+##     img = read_image_test(image_path, input_size)  
+
+##     mask_path = '../mask.png'
+##     input_size = (224,224)
+##     mask = read_mask_test(mask_path, input_size)  
+
+##     patch = read_patch_test(img,mask,patch_size=(64,64))
+
+    return extract_patch(img, find_lesion_coordiates(mask), patch_size)
+
+
+
+
+
+def read_patch_rvs_test(img,mask,patch_size=(64,64)):
+## extract a list of patches from a image based on lesion mask
+##     img: numpy array, the lung image
+##     mask: numpy array, the lesion mask
+##     patch_size: tuple, (row,col)
+
+##     return: a list of numpy array(float64), the patches
+
+## example
+
+##     image_path = '../img.png'
+##     input_size = (224,224)
+##     img = read_image_test(image_path, input_size)  
+
+##     mask_path = '../mask.png'
+##     input_size = (224,224)
+##     mask = read_mask_test(mask_path, input_size)  
+
+##     patches = read_patch_rvs_test(img,mask,patch_size=(64,64)) # return a list of patches
+
+    p,n = generate_patch_from_img_random_views(img, find_lesion_coordiates(mask), patch_size)
+    return p
 
 
 
@@ -665,7 +780,7 @@ if __name__ == "__main__":
 
 
     # for Unet segmentation training: 
-    a1,b1,c1,d1,e1,f1 = read_data_unet(csvPath,imagePath, maskPath, inputSize, split_ratio=0.2, aug_rotate=6)
+    a1,b1,c1,d1,e1,f1 = read_data_unet(csvPath,imagePath, maskPath, inputSize, split_ratio=0, aug_rotate=1)
     print('Unet training data preparation:')
     print('Training:', a1.shape, b1.shape, c1.shape)
     print('Valiadation:', d1.shape, e1.shape, f1.shape)
@@ -685,6 +800,6 @@ if __name__ == "__main__":
 
     ## utility function for usage in testing and web backend
 
-    ##find_leision_coordiates(mask)
+    ##find_lesion_coordiates(mask)
     ##generate_patch_from_img(img,coor,patch_size)
-    ##generate_path_from_img_random_views(img,coor,patch_size)
+    ##generate_patch_from_img_random_views(img,coor,patch_size)
