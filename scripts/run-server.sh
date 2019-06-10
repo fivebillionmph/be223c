@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../src"
 
-python src/server.py -m data/model -s data/segs2/patches
+python server.py -m ../data/model -s ../data/segs2/patches

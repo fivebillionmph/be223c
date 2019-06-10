@@ -58,7 +58,8 @@ def route_api_query_image():
     f = request.files["file"]
     pil_img = Image.open(f)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    filtered_img = preprocess.preprocess(img)
+    filtered_img = preprocess.resize(img)
+    filtered_img = preprocess.preprocess(filtered_img)
     patch = util.extract_patch(filtered_img, (request_data["point"]["y"], request_data["point"]["x"]), preprocess.PATCH_SIZE)
 
     prob = g_data["model"].prob(filtered_img)
