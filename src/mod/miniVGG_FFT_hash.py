@@ -50,7 +50,7 @@ class ImageSimilarity2:
         self.mean_activations = []
         self.model = Model()
         
-        print("%.0f pictures found in root directory" % len(os.listdir(images_dir)))
+        #print("%.0f pictures found in root directory" % len(os.listdir(images_dir)))
         
         df = pd.read_csv(r"C:\workspace\223C\Master3.csv")
         self.paths = df['File']
@@ -65,15 +65,15 @@ class ImageSimilarity2:
                 im = cv2.resize(im, (128,128))
                 im = im / 255.0
                 self.images.append(im)
-                print(path)
+                #print(path)
                 
             except FileNotFoundError:
-                print("Image %s not found" % self.paths[i])
+                #print("Image %s not found" % self.paths[i])
         
         labels = df['Progression']
         labels = np.array(labels)
         
-        print("[INFO] preparing training and testing datasets...")
+        #print("[INFO] preparing training and testing datasets...")
         (trainX, testX, trainY, testY) = train_test_split(self.images, labels, test_size=0.10, random_state=42)
         
         trainX = np.array(trainX)
@@ -92,7 +92,7 @@ class ImageSimilarity2:
         labelNames = ["no response", "response"]
         
         # initialize the optimizer and model
-        print("[INFO] compiling model...")
+        #print("[INFO] compiling model...")
         opt = SGD(lr=INIT_LR, momentum=0.9, decay=INIT_LR / NUM_EPOCHS)
         self.model = miniVGG(width=128, height=128, depth=1, classes=2)
         # check for structure of the model
@@ -100,15 +100,15 @@ class ImageSimilarity2:
         self.model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
         
         # train the network
-        print("[INFO] training model...")
+        #print("[INFO] training model...")
         H = self.model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=BS, epochs=NUM_EPOCHS)
         
         # make predictions on the test set
         preds = self.model.predict(testX)
          
         # show a nicely formatted classification report
-        print("[INFO] evaluating network...")
-        print(classification_report(testY, preds, target_names=labelNames))
+        #print("[INFO] evaluating network...")
+        #print(classification_report(testY, preds, target_names=labelNames))
         
         # compute the confusion matrix and and use it to derive accuracy, sensitivity, and specificity
         #cm = confusion_matrix(testY, preds.argmax(axis=1), labels=range(num_classes))
@@ -151,13 +151,13 @@ class ImageSimilarity2:
         
         activations = self.activation_model.predict(images_2)
         pool = np.array(activations[-9])
-        print(pool.shape)
+        #print(pool.shape)
         
         for i in range(pool.shape[0]):
             
             means = []
             
-            print("Calculating global mean activation from feature map for image %d" % i)
+            #print("Calculating global mean activation from feature map for image %d" % i)
             
             
             
@@ -260,7 +260,7 @@ class ImageSimilarity2:
         image_orig = np.array(image)
         image_orig = cv2.resize(image_orig, (128,128))
         image = image_orig / 255.0
-        print(image.shape)
+        #print(image.shape)
 
         matches = []
         hammings = []
@@ -271,14 +271,14 @@ class ImageSimilarity2:
         
         activations = self.activation_model.predict(image)
         pool = np.array(activations[-9])
-        print(pool.shape)
+        #print(pool.shape)
         
         for i in range(pool.shape[0]):
             
             image_activations = []
             means = []
             
-            print("Calculating global mean activation from feature map for query image")
+            #print("Calculating global mean activation from feature map for query image")
             
             for j in range(pool.shape[3]):
         
@@ -339,7 +339,7 @@ class ImageSimilarity2:
         
         for i in range(len(hammings)):
             if hammings[i] <= 2:
-                print("[Match]: %s" % self.paths[i])
+                #print("[Match]: %s" % self.paths[i])
                 matches.append(self.paths[i])
                 
                 im = np.array(self.images[i])
@@ -351,7 +351,7 @@ class ImageSimilarity2:
                 
                 mi = mutual_info_score(image_orig.flatten(), im.astype(dtype=np.uint8).flatten())
                 jac = jaccard_similarity_score(image_orig.flatten(), im.astype(dtype=np.uint8).flatten())
-                print("Mutual information: %.3f \t Jaccard score: %.3f" % (mi, jac))
+                #print("Mutual information: %.3f \t Jaccard score: %.3f" % (mi, jac))
 
         return matches
 
