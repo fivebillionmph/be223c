@@ -22,7 +22,7 @@ def main():
         mask_file = [f for f in mask_files if cf == ops(f)[0]][0]
         image_file = [f for f in image_files if cf == ops(f)[0]][0]
         mask = Image.open(opj(mask_dir, mask_file))
-        mask = PIL.ImageOps.invert(mask)
+        #mask = PIL.ImageOps.invert(mask)
         patch_coords = util.find_leision_coordiates(np.array(mask))
         image = Image.open(opj(image_dir, image_file))
         #image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)

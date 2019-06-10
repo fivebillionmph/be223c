@@ -4,7 +4,7 @@ from . import util
 
 WIDTH = 224
 HEIGHT = 224
-PATCH_SIZE = (48, 48)
+PATCH_SIZE = (64, 64)
 
 def preprocess(img):
     if not is_greyscale(img):
