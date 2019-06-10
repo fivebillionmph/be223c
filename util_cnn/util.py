@@ -647,6 +647,17 @@ def read_patch_rvs_test(img,mask,patch_size=(64,64)):
     return p
 
 
+def gray2RGB(im):
+## convert a 2-D numpy array (or a list of 2-D numpy array)to 3-channel numpy array (or a list of 3-channel numpy array)
+## im (numpy array): (row,col)
+
+## example:
+#   im = cv2.imread('../im.png','cv2.IMREAD_GRAYSCALE')
+#   im2 = gray2RGB(im)   #im2 (row,col,3)
+
+    return np.stack( [np.array(im)] * 3, axis=-1 ) 
+
+
 
 
 
