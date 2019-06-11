@@ -103,8 +103,8 @@ class ImageSimilarity:
         """ image_hash = hashing_func(processing_func(image))
             find most similar images by hamming distance or some other metric """
 
-        image_orig = self.processing_func(np.array(image))
-        image_orig = cv2.resize(image_orig, (128,128))
+        #image_orig = self.processing_func(np.array(image))
+        image_orig = cv2.resize(image, (128,128))
         image = image_orig / 255.0
         #print(image.shape)
 
@@ -162,7 +162,7 @@ class ImageSimilarity:
         
         for i in range(len(hammings)):
             if hammings[i] <= 40:
-                matches.append({"name": self.image_names[i], "similarity": 128 / (hammings[i] + 1)})
+                matches.append({"name": self.image_names[i], "similarity": hammings[i]})
 
         return matches
 

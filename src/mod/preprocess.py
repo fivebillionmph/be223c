@@ -20,3 +20,12 @@ def resize(img):
 
 def is_greyscale(img):
     return len(img.shape) < 3
+
+def translate_patch_coordinates(img, point):
+    scale_w = img.shape[0] / WIDTH
+    scale_h = img.shape[1] / HEIGHT
+    new_point = {
+        "x": int(point["x"] * scale_w),
+        "y": int(point["y"] * scale_h),
+    }
+    return new_point

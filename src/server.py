@@ -12,6 +12,10 @@ import base64
 from io import BytesIO
 import json
 
+MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
+HASH_IMG_DIR = "../data/segs2/patches"
+CLASSIFY_MODEL_PATH = "../data/lesion_classification.model"
+
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024 # max upload size 16 megabytes
@@ -21,19 +25,10 @@ def main():
     global g_data
     g_data = {}
 
-    args = get_args()
-    g_data["model"] = Model(args.m, graph)
-    g_data["hash_dir"] = args.s
-    g_data["hash_similarity"] = ImageSimilarity(g_data["hash_dir"], preprocess.preprocess, "../data/miniVGG.h5", graph)
+    g_data["model"] = Model(CLASSIFY_MODEL_PATH, graph)
+    g_data["hash_similarity"] = ImageSimilarity(HASH_IMG_DIR, preprocess.preprocess, MINIVGG_MODEL_PATH, graph)
 
     app.run(host="0.0.0.0", port=8085)
-
-def get_args():
-    parser = ArgumentParser()
-    parser.add_argument("-m", help="neural network model file")
-    parser.add_argument("-s", help="hash files directory")
-    args = parser.parse_args()
-    return args
 
 def auth_check(auth):
     if auth is None:
@@ -58,12 +53,12 @@ def route_api_query_image():
     f = request.files["file"]
     pil_img = Image.open(f)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    filtered_img = preprocess.resize(img)
-    filtered_img = preprocess.preprocess(filtered_img)
-    patch = util.extract_patch(filtered_img, (request_data["point"]["y"], request_data["point"]["x"]), preprocess.PATCH_SIZE)
+    filtered_img = preprocess.preprocess(img)
+    translated_patch_coordinates = preprocess.translate_patch_coordinates(filtered_img, request_data["point"])
+    patch = util.extract_patch(filtered_img, (translated_patch_coordinates["y"], translated_patch_coordinates["x"]), preprocess.PATCH_SIZE)
 
-    prob = g_data["model"].prob(filtered_img)
-    similarities = g_data["hash_similarity"].query_image(filtered_img)
+    prob = g_data["model"].classify(filtered_img)
+    similarities = g_data["hash_similarity"].query_image(patch)
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
     res = {
@@ -78,7 +73,7 @@ def route_api_query_image():
 def route_similar_images(filename):
     if not auth_check(request.authorization):
         return auth_fail()
-    return send_from_directory(g_data["hash_dir"], filename)
+    return send_from_directory(HASH_IMG_DIR, filename)
 
 @app.route("/")
 def route_index():
