@@ -100,6 +100,23 @@ def test_seg(label_path, image_path, mask_path, load_path, save_path, img_dim = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+## export the following functions
+
+
+
+
+
 ## predict a mask from a lung image
 # img (2d numpy array): lung images on grayscale
 # model_path (str): path to the model
@@ -127,6 +144,15 @@ def infer_seg(img, model_path):
     return mask_output
 
 
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
 
     # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -136,11 +162,11 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     train_label_path = '../Dataset/Train.csv'
-    train_image_path = '../Dataset/Train-PNG/'
-    train_mask_path = '../Dataset/Train-Seg-Mask/'
+    train_image_path = '../Dataset/Train-Seg-Man/'  #'../Dataset/Train-PNG/'
+    train_mask_path = '../Dataset/Train-Patch/'
     test_label_path = '../Dataset/Test.csv'
-    test_image_path = '../Dataset/Test-PNG/'
-    test_mask_path = '../Dataset/Test-Seg-Mask/'
+    test_image_path = '../Dataset/Test-Seg-Man/'
+    test_mask_path = '../Dataset/Test-Patch/'
 
 
     tfbd_path = '../tensorboard/'
@@ -148,7 +174,7 @@ if __name__ == "__main__":
     save_path = '../save/'
     test_save_path = '../test/'
 
-    # img = cv2.imread( join(image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
+    # img = cv2.imread( join(test_image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
     # mask = infer_seg(img, join(save_path, 'lung_seg.model'))
 
     pass

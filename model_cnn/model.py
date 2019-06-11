@@ -73,6 +73,21 @@ def createModel_Unet(row,col,depth):
 
     return model
 
+def createModel_encoder(model_unet):
+
+    encoder_unet = Model(inputs=model_unet.input, outputs=model_unet.get_layer('activation_10').output, name='encoder_unet'  )
+    encoder = Sequential()
+    encoder.add(encoder_unet)
+    encoder.add(Flatten())
+    encoder.add(Dense(256, activation='relu'))
+    encoder.add(Dropout(0.1))
+    encoder.add(Dense(32, activation='relu'))
+    encoder.add(Dense(1, activation='sigmoid'))
+
+    return encoder
+
+
+
 def vgg16_classify(row, col, depth):
     
     input_shape = (row, col, depth)
@@ -96,8 +111,9 @@ if __name__ == "__main__":
     # model = createModel_AlexNet(227,227,1,2)
     # model = createModel_ResNet18(229,229,1,2)
     # model = createModel_DensNet(224,224,1,2)
-    # model = createModel_Unet(256,256,1)
-    model = vgg16_classify(64,64,3)
-    print(model.summary())
-    a = model.inputs
-    print(model.inputs)
+    model = createModel_Unet(128,128,1)
+    encoder = createModel_encoder(model)
+    # model = vgg16_classify(64,64,3)
+    print(encoder.summary())
+    # a = model.inputs
+    # print(model.inputs)
