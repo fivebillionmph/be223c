@@ -6,6 +6,7 @@ from mod.model import Classifier, Segmenter
 from mod.miniVGG_FFT_hash import ImageSimilarity
 from mod import preprocess
 from mod import util
+from mod.labels import Labels
 from argparse import ArgumentParser
 import tensorflow as tf
 import base64
@@ -16,6 +17,8 @@ MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
 HASH_IMG_DIR = "../data/segs2/patches"
 CLASSIFY_MODEL_PATH = "../data/lesion_classification.model"
 SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
+LABEL_FILES = ["../data/Test.csv", "../data/Train.csv"]
+CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
 
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -29,6 +32,7 @@ def main():
     g_data["classifier"] = Classifier(CLASSIFY_MODEL_PATH, graph)
     g_data["segmenter"] = Segmenter(SEGMENTER_MODEL_PATH, graph)
     g_data["hash_similarity"] = ImageSimilarity(HASH_IMG_DIR, preprocess.preprocess, MINIVGG_MODEL_PATH, graph)
+    g_data["labels"] = Labels(LABEL_FILES)
 
     app.run(host="0.0.0.0", port=8085)
 
@@ -65,6 +69,7 @@ def route_api_query_image():
     prob = g_data["classifier"].classify(filtered_img)
 
     similarities = g_data["hash_similarity"].query_image(patch)
+    similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
     res = {
