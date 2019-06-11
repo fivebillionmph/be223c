@@ -1,8 +1,10 @@
 import keras
 import numpy as np
 import cv2
+from .seg_lung import infer_seg
+from .util import extract_from_mask
 
-class Model:
+class Classifier:
     def __init__(self, filename, graph):
         # why graph is needed:
         # https://kobkrit.com/tensor-something-is-not-an-element-of-this-graph-error-in-keras-on-flask-web-server-4173a8fe15e1
@@ -16,3 +18,14 @@ class Model:
             img = np.expand_dims(img, axis=-1)
             img = np.expand_dims(img, axis=0)
             return float(self.model.predict(img)[0])
+
+class Segmenter:
+    def __init__(self, filename, graph):
+        self.model = keras.models.load_model(filename)
+        self.graph = graph
+
+    def segmenter(self, img):
+        with self.graph.as_default():
+            mask = infer_seg(img, self.model)
+        img = extract_from_mask(img, mask)
+        return img

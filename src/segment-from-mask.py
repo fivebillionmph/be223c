@@ -8,6 +8,7 @@ import sys
 import os
 from os.path import join as opj
 from PIL import Image
+from mod.util import extract_from_mask
 
 def main():
     image_dir = sys.argv[1]
@@ -27,13 +28,5 @@ def main():
 
 def get_all_files(d):
     return [f for f in os.listdir(d) if os.path.isfile(opj(d, f))]
-
-def extract_from_mask(image, mask):
-    new_image = np.copy(image)
-    for i in range(len(mask)):
-        for j in range(len(mask[i])):
-            if mask[i][j] == 0:
-                new_image[i][j] = 0
-    return new_image
 
 main()

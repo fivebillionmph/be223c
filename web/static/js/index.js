@@ -46,9 +46,9 @@ var app = new Vue({
                 that.result = response.data;
                 that.result.similar_images.sort(function(a, b) {
                     if(b.similarity > a.similarity) {
-                        return 1;
-                    } else if(b.similarity < a.similarity) {
                         return -1;
+                    } else if(b.similarity < a.similarity) {
+                        return 1;
                     }
                     return 0;
                 });

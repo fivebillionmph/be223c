@@ -1,5 +1,5 @@
-from util_cnn.util import read_data_unet,normalize
-from model_cnn.model import createModel_Unet
+from .util import read_data_unet,normalize
+from .model_cnn.model import createModel_Unet
 import argparse
 import os
 from os.path import join
@@ -122,7 +122,7 @@ def test_seg(label_path, image_path, mask_path, load_path, save_path, img_dim = 
 # model_path (str): path to the model
 
 # return: mask (2d numpy array): mask with the same size of input image 
-def infer_seg(img, model_path):
+def infer_seg(img, model):
     ## ----------------------------- example ---------------------------------------
     # image_path = '../Dataset/Test-PNG/'
     # model_path = '../save/'
@@ -133,12 +133,13 @@ def infer_seg(img, model_path):
 
     output_size = img.shape
 
-    model = load_model(model_path)
     input_size = ( int(model.inputs[0].shape[1]), int(model.inputs[0].shape[2]) )
 
-    img_rz = normalize(cv2.resize(img, (input_size[1],input_size[0])))
+    img_rz = cv2.resize(img, (input_size[1],input_size[0]))
+    img_rz = cv2.cvtColor(img_rz, cv2.COLOR_BGR2GRAY)
     img_rz = np.expand_dims(img_rz, axis=-1)
     img_rz = np.expand_dims(img_rz, axis=0)
+    print(img_rz.shape)
     mask_output = cv2.resize( model.predict(img_rz)[0,:,:,0], (output_size[1], output_size[0]) )
     mask_output = np.float64(mask_output>.5)
     return mask_output

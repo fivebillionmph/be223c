@@ -2,7 +2,7 @@ from flask import Flask, render_template, jsonify, send_file, request, Response,
 from PIL import Image
 import cv2
 import numpy as np
-from mod.model import Model
+from mod.model import Classifier, Segmenter
 from mod.miniVGG_FFT_hash import ImageSimilarity
 from mod import preprocess
 from mod import util
@@ -15,6 +15,7 @@ import json
 MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
 HASH_IMG_DIR = "../data/segs2/patches"
 CLASSIFY_MODEL_PATH = "../data/lesion_classification.model"
+SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
 
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -25,7 +26,8 @@ def main():
     global g_data
     g_data = {}
 
-    g_data["model"] = Model(CLASSIFY_MODEL_PATH, graph)
+    g_data["classifier"] = Classifier(CLASSIFY_MODEL_PATH, graph)
+    g_data["segmenter"] = Segmenter(SEGMENTER_MODEL_PATH, graph)
     g_data["hash_similarity"] = ImageSimilarity(HASH_IMG_DIR, preprocess.preprocess, MINIVGG_MODEL_PATH, graph)
 
     app.run(host="0.0.0.0", port=8085)
@@ -53,11 +55,12 @@ def route_api_query_image():
     f = request.files["file"]
     pil_img = Image.open(f)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    filtered_img = preprocess.preprocess(img)
+    segmented_img = g_data["segmenter"].segmenter(img)
+    filtered_img = preprocess.preprocess(segmented_img)
     translated_patch_coordinates = preprocess.translate_patch_coordinates(filtered_img, request_data["point"])
     patch = util.extract_patch(filtered_img, (translated_patch_coordinates["y"], translated_patch_coordinates["x"]), preprocess.PATCH_SIZE)
 
-    prob = g_data["model"].classify(filtered_img)
+    prob = g_data["classifier"].classify(filtered_img)
     similarities = g_data["hash_similarity"].query_image(patch)
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
