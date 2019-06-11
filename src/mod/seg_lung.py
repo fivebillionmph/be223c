@@ -136,10 +136,9 @@ def infer_seg(img, model):
     input_size = ( int(model.inputs[0].shape[1]), int(model.inputs[0].shape[2]) )
 
     img_rz = cv2.resize(img, (input_size[1],input_size[0]))
-    img_rz = cv2.cvtColor(img_rz, cv2.COLOR_BGR2GRAY)
+    #img_rz = cv2.cvtColor(img_rz, cv2.COLOR_BGR2GRAY)
     img_rz = np.expand_dims(img_rz, axis=-1)
     img_rz = np.expand_dims(img_rz, axis=0)
-    print(img_rz.shape)
     mask_output = cv2.resize( model.predict(img_rz)[0,:,:,0], (output_size[1], output_size[0]) )
     mask_output = np.float64(mask_output>.5)
     return mask_output

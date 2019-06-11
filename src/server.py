@@ -55,12 +55,15 @@ def route_api_query_image():
     f = request.files["file"]
     pil_img = Image.open(f)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    segmented_img = g_data["segmenter"].segmenter(img)
-    filtered_img = preprocess.preprocess(segmented_img)
+    filtered_img = preprocess.preprocess(img)
+    filtered_img = g_data["segmenter"].segmenter(filtered_img)
+
     translated_patch_coordinates = preprocess.translate_patch_coordinates(filtered_img, request_data["point"])
     patch = util.extract_patch(filtered_img, (translated_patch_coordinates["y"], translated_patch_coordinates["x"]), preprocess.PATCH_SIZE)
 
+    filtered_img = preprocess.preprocess(filtered_img)
     prob = g_data["classifier"].classify(filtered_img)
+
     similarities = g_data["hash_similarity"].query_image(patch)
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
