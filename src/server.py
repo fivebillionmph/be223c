@@ -3,7 +3,7 @@ from PIL import Image
 import cv2
 import numpy as np
 from mod.model import Model
-from mod.hash_attempt import ImageSimilarity
+from mod.miniVGG_FFT_hash import ImageSimilarity
 from mod import preprocess
 from mod import util
 from argparse import ArgumentParser
@@ -24,7 +24,7 @@ def main():
     args = get_args()
     g_data["model"] = Model(args.m, graph)
     g_data["hash_dir"] = args.s
-    g_data["hash_similarity"] = ImageSimilarity(g_data["hash_dir"], preprocess.preprocess)
+    g_data["hash_similarity"] = ImageSimilarity(g_data["hash_dir"], preprocess.preprocess, "../data/miniVGG.h5", graph)
 
     app.run(host="0.0.0.0", port=8085)
 
