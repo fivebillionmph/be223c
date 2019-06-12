@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, send_file, request, Response, send_from_directory
+from flask import Flask, render_template, jsonify, send_file, request, Response, send_from_directory, abort
 from PIL import Image
 import cv2
 import numpy as np
@@ -12,14 +12,17 @@ import tensorflow as tf
 import base64
 from io import BytesIO
 import json
+from os.path import join as opj
 
 MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
-HASH_IMG_DIR = "../data/segs2/patches"
+HASH_IMG_DIR = "../data/segs2/patches-training"
 CLASSIFY_MODEL_1 = ("UNET architecture", "../data/lesion_classification.model")
 CLASSIFY_MODEL_2 = ("VGG16 architecture", "../data/model")
 SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
 LABEL_FILES = ["../data/Test.csv", "../data/Train.csv"]
 CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
+MODEL1_TEST_DIR = "../data/test-model1"
+MODEL2_TEST_DIR = "../data/test-model2"
 
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -89,6 +92,38 @@ def route_similar_images(filename):
     if not auth_check(request.authorization):
         return auth_fail()
     return send_from_directory(HASH_IMG_DIR, filename)
+
+@app.route('/modelimg/<int:modelid>/<path:filename>')
+def route_modelimg(modelid, filename):
+    if not auth_check(request.authorization):
+        return auth_fail()
+    if modelid == 1:
+        dire = MODEL1_TEST_DIR
+    elif modelid == 2:
+        dire = MODEL2_TEST_DIR
+    else:
+        abort(404)
+        return
+    return send_from_directory(dire, filename)
+
+@app.route('/model/<int:modelid>')
+def route_model(modelid):
+    if not auth_check(request.authorization):
+        return auth_fail()
+    page_data = {}
+    if modelid == 1:
+        dire = MODEL1_TEST_DIR
+    elif modelid == 2:
+        dire = MODEL2_TEST_DIR
+    else:
+        abort(404)
+        return
+    with open(opj(dire, "description.html")) as f:
+        page_data["description"] = f.read()
+    with open(opj(dire, "stats.json")) as f:
+        page_data["stats"] = json.load(f)
+    page_data["modelid"] = modelid
+    return render_template("model.html", data=page_data)
 
 @app.route("/")
 def route_index():

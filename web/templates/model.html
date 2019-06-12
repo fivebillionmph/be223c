@@ -1,0 +1,29 @@
+{% extends "__base.html" %}
+
+{% block title %}Model info{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div>
+        <h2><a href="/">223C final project</a></h2>
+    </div>
+    <div>
+        <h4>About this model</h4>
+        <p>{{ data.description | safe }}</p>
+    </div>
+    <div>
+        <div class="result-box">
+            <h6>Area under the curve</h6>
+            {{ "%0.2f" % data.stats.auc | float }}
+        </div>
+        <div class="result-box">
+            <h6>Receive operating characteristic</h6>
+            <img class="img-responsive" src="/modelimg/{{ data.modelid }}/roc.png" />
+        </div>
+        <div class="result-box">
+            <h6>Precision/recall curve</h6>
+            <img class="img-responsive" src="/modelimg/{{ data.modelid }}/precision-recall.png" />
+        </div>
+    </div>
+</div>
+{% endblock %}
