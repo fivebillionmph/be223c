@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  4 07:50:27 2019
-
-@author: josep
-"""
-
 """ Mini-VGG FFT Hash """
-
 # import the necessary packages
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -35,9 +27,16 @@ from keras.utils import np_utils
 import keras
 
 class ImageSimilarity:
+    """ Instantiate a class for storing images and hashes """
+    
     def __init__(self, images_dir, processing_func, model_file, graph):
         """for each image: hash = hashing_func(processing_func(image))
-           save hash in list """
+           save hash in list
+        
+        Parameters:
+        -path or directory to the image folder
+        -preprocessing function for the images
+        """
 
         # initialize the number of epochs to train for, base learning rate, and batch size
         self.images = []
@@ -48,6 +47,7 @@ class ImageSimilarity:
         self.image_names = os.listdir(images_dir)
         self.processing_func = processing_func
         
+        # loop through image directory to store images, paths
         for i in range(len(self.image_names)):
             path = opj(images_dir, self.image_names[i])
             
@@ -57,13 +57,19 @@ class ImageSimilarity:
             im = im / 255.0
             self.images.append(im)
         
-        # Returns a list of five Numpy arrays: one array per layer activation
+        # Returns image numpy array to feed into the model
         images_2 = np.expand_dims(np.array(self.images), 3)
 
+        # get all activations from model layers
         with self.graph.as_default():
             activations = self.activation_model.predict(images_2)
+        
+        # pick out the output from the pooling layer of interest; output size (32x32x128)
         pool = np.array(activations[-9])
         
+        # calculate mean activations for this pooling layer for each of the 128 feature maps
+        # pool.shape[0] tells you how many pictures we're trying to hash
+        # pool.shape[3] is 128 for each of the 128 feature maps
         for i in range(pool.shape[0]):
             means = []
 
@@ -100,8 +106,15 @@ class ImageSimilarity:
             self.hashes.append(h)
 
     def query_image(self, image):
-        """ image_hash = hashing_func(processing_func(image))
-            find most similar images by hamming distance or some other metric """
+         """ image_hash = hashing_func(processing_func(image))
+            find most similar images by hamming distance 
+        
+        Parameters:
+        -query image
+        
+        Output:
+        -final_matches: paths to the similar images
+        """
 
         #image_orig = self.processing_func(np.array(image))
         image_orig = cv2.resize(image, (128,128))
@@ -111,13 +124,15 @@ class ImageSimilarity:
         matches = []
         hammings = []
         
-        # Returns a list of five Numpy arrays: one array per layer activation
+        # Returns image numpy array to feed into the model
         image = np.expand_dims(image, axis=0)
         image = np.expand_dims(image, axis=3)
         
+        # Get activations for the query image
         with self.graph.as_default():
             activations = self.activation_model.predict(image)
-
+        
+        # Get activations from the pooling layer (32x32x128)
         pool = np.array(activations[-9])
 
         for i in range(pool.shape[0]):
@@ -155,6 +170,7 @@ class ImageSimilarity:
                     h.append(0)
             query_hash = h
         
+        # Generate hamming distance (i.e. how many out of the 128-bits are different)
         for i in range(len(self.hashes)):
             hammings.append(int(hamming(query_hash, self.hashes[i]) * 128))
             
@@ -167,6 +183,8 @@ class ImageSimilarity:
         return matches
 
 def miniVGG(width, height, depth, classes):
+    """ the base model CNN for the activations for hashing """
+    
     inputShape = (height, width, depth)
     model = Sequential()
 
@@ -215,6 +233,17 @@ def miniVGG(width, height, depth, classes):
     return model
 
 def train_model(images_dir, labels_file, processing_func):
+    """ model training in order to get the activations for hashing
+    
+    Parameters:
+    -images_dir: path or directory to the folder of images
+    -labels_file: csv file containing the response/no response label for the predictions
+    -processing_func: preprocessing function for the images
+    
+    Output:
+    -activations for hashing
+    """
+    
     images = []
 
     NUM_EPOCHS = 5
