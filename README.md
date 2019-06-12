@@ -10,5 +10,5 @@
   - Shared modules used by scripts in /src.
 - [/src2](https://github.com/fivebillionmph/be223c/tree/master/src2)
   - Other scripts for generating models or segmenting.
-- /web
+- [/web](https://github.com/fivebillionmph/be223c/tree/master/web)
   - HTML templates and static CSS, JS and images
