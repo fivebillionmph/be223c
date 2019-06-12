@@ -5,13 +5,12 @@ FROM python:3
 
 RUN mkdir project
 
-ADD src /project
-ADD data /project
-ADD web /project
-ADD scripts /project
+COPY src /project/src
+COPY data /project/data
+COPY web /project/web
+COPY scripts /project/scripts
 COPY requirements.txt .
 
-RUN apt update && apt install -y python3 python3-pip
 RUN pip3 install -r requirements.txt
 
-CMD ["/project/scripts/run-server.py"]
+CMD ["/project/scripts/run-server.sh"]
