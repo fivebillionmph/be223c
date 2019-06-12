@@ -32,8 +32,19 @@
             </div>
             <div class="col-md-6">
                 <h6>About this project</h6>
-                <a href="/model/1">Model 1</a><br/>
-                <a href="/model/2">Model 2</a>
+                <p>This project attempts to predict if a lung cancer patient will respond to immunotherapy treatment.  Lung CT scans were taken before and after treatment with anti-PD1 immunotherapy.</p>
+                <p>Two deep learning models were trained on the pre-treatment images to classify if the disease will pregress or not: A UNET based model which classifies against the entire image and a VGG16 based model which classifies based on the selected patch.</p>
+                <p>A content based retrieval based on miniVGG and image similarity hashing was also trained so similar lesions can be returned.</p>
+                <p>An automatic lung segmentation model was also created so that users do not need to segment the lungs out of surrounding tissue themselves.</p>
+                <p><a href="/model/1">UNET based model description</a></p>
+                <p><a href="/model/2">VGG16 based model description</a></p>
+                <h6>How to use</h6>
+                <ol>
+                    <li>Select a lung image with a tumor nodule.</li>
+                    <li>Click on the tumor nodule in the lung image.</li>
+                    <li>Submit the image.</li>
+                </ol>
+                <p>Two probabilities for both models will be returned representing the probability of progression in each model.  Results of the content based image retrieval system are displayed on the right.  An image showing the processed and segmented lung image and the patch that was selected by the user are also displayed.</p>
             </div>
         </div>
         <hr v-if="result"/>
@@ -43,9 +54,9 @@
             </div>
             <div class="col-md-6">
                 <div class="result-box">
-                    <h6>Probability of response to immunotherapy</h6>
-                    UNET based classifier: <span v-bind:class="{'text-success': result.probability1 >= 0.5, 'text-danger': result.probability1 < 0.5}">${ probString(result.probability1) }</span><br/>
-                    VGG16 based classifier: <span v-bind:class="{'text-success': result.probability2 >= 0.5, 'text-danger': result.probability2 < 0.5}">${ probString(result.probability2) }</span>
+                    <h6>Probability of disease progression</h6>
+                    UNET based classifier: <span v-bind:class="{'text-danger': result.probability1 >= 0.5, 'text-success': result.probability1 < 0.5}">${ probString(result.probability1) }</span><br/>
+                    VGG16 based classifier: <span v-bind:class="{'text-danger': result.probability2 >= 0.5, 'text-success': result.probability2 < 0.5}">${ probString(result.probability2) }</span>
                 </div>
                 <div class="result-box">
                     <h6>Filtered image</h6>
@@ -58,18 +69,25 @@
                     <p>This is the manually selected lesion patch given to the content based retrieval module and the classifier model (after normalization and segmentation).</p>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <div>
                     <h6 v-show="result.similar_images.length > 0">Similar lesions (${ result.similar_images.length }):</h6>
                     <h6 v-show="result.similar_images.length == 0">No similar lesions found</h6>
                     <div class="scroll-y">
                         <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Hamming distance</th>
+                                    <th>Response</th>
+                                    <th>Lesion</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 <tr v-for="image in result.similar_images">
                                     <td><strong>${ image.similarity }</strong></td>
                                     <td>
-                                        <span class="text-success" v-show="image.response">Responds to immunotherapy</span>
-                                        <span class="text-danger" v-show="!image.response">No response to immunotherapy</span>
+                                        <span class="text-danger" v-show="image.response">Progression</span>
+                                        <span class="text-success" v-show="!image.response">No progression</span>
                                     </td>
                                     <td><img class="img-responsive similar-img" v-bind:src="'/similar-images/' + image.name" /></td>
                                 </tr>
