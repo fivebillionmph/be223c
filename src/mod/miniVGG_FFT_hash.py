@@ -106,7 +106,7 @@ class ImageSimilarity:
             self.hashes.append(h)
 
     def query_image(self, image):
-         """ image_hash = hashing_func(processing_func(image))
+        """ image_hash = hashing_func(processing_func(image))
             find most similar images by hamming distance 
         
         Parameters:
