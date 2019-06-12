@@ -21,6 +21,7 @@ class Classifier:
 
     def classify2(self, img):
         with self.graph.as_default():
+            img = cv2.merge((img, img, img))
             input_size = ( int(self.model.inputs[0].shape[1]), int(self.model.inputs[0].shape[2]) )
             img = cv2.resize(img, (input_size[1], input_size[0]))
             return float(self.model.predict(np.array([img]))[0][0])

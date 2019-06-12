@@ -69,8 +69,7 @@ def route_api_query_image():
 
     filtered_img = preprocess.preprocess(filtered_img)
     prob1 = g_data["classifier1"].classify1(filtered_img)
-    color_patch = cv2.merge((patch, patch, patch))
-    prob2 = g_data["classifier2"].classify2(color_patch)
+    prob2 = g_data["classifier2"].classify2(patch)
 
     similarities = g_data["hash_similarity"].query_image(patch)
     similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
