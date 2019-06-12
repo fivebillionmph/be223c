@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from .seg_lung import infer_seg
 from .util import extract_from_mask
+from .preprocess import preprocess
 
 class Classifier1:
     def __init__(self, filename, graph):
@@ -15,6 +16,7 @@ class Classifier1:
         with self.graph.as_default():
             input_size = ( int(self.model.inputs[0].shape[1]), int(self.model.inputs[0].shape[2]) )
             img = cv2.resize(img, (input_size[1], input_size[0]))
+            img = preprocess(img)
             img = np.expand_dims(img, axis=-1)
             img = np.expand_dims(img, axis=0)
             return float(self.model.predict(img)[0])

@@ -1,3 +1,7 @@
+"""
+written by James Go
+"""
+
 import sys
 import cv2
 import numpy as np
@@ -9,6 +13,14 @@ from PIL import Image
 from mod import preprocess
 
 def main():
+    """
+    this script automatically segments each images using the lung segmentation model
+
+    CLI Args:
+        1: the path to the lung segmentation model file
+        2: the path to the directory with all the images that will be segmented
+        3: the path to the output directory where all the segmented images will be written with the same filename
+    """
     model_file = sys.argv[1]
     image_dir = sys.argv[2]
     out_dir = sys.argv[3]

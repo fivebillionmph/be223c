@@ -1,7 +1,6 @@
-##
-## this script assumes each image has a mask and each mask has an image
-## and they all have the same name
-##
+"""
+written by James Go
+"""
 
 import numpy as np
 import sys
@@ -11,6 +10,9 @@ from PIL import Image
 from mod.util import extract_from_mask
 
 def main():
+    """
+    this script assumes each image has a mask and each mask has an image and they all have the same name
+    """
     image_dir = sys.argv[1]
     mask_dir = sys.argv[2]
     out_dir = sys.argv[3]

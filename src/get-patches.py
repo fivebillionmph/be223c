@@ -1,3 +1,7 @@
+"""
+written by James Go
+"""
+
 from mod import util, preprocess
 import sys
 import os
@@ -9,6 +13,15 @@ import numpy as np
 import cv2
 
 def main():
+    """
+    this script extracts patches using images and lesion masks
+    images with the same name will be matched between the two input directories
+
+    CLI Args:
+        1: a directory of segmented lung images
+        2: a directory of lesion masks
+        3: the output directory for the patches
+    """
     image_dir = sys.argv[1]
     mask_dir = sys.argv[2]
     out_dir = sys.argv[3]
