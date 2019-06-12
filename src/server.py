@@ -16,7 +16,7 @@ import json
 MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
 HASH_IMG_DIR = "../data/segs2/patches"
 CLASSIFY_MODEL_1 = ("UNET architecture", "../data/lesion_classification.model")
-CLASSIFY_MODEL_2 = ("VGG16 architecture", "../data/")
+CLASSIFY_MODEL_2 = ("VGG16 architecture", "../data/model")
 SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
 LABEL_FILES = ["../data/Test.csv", "../data/Train.csv"]
 CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
@@ -31,7 +31,7 @@ def main():
     g_data = {}
 
     g_data["classifier1"] = Classifier(CLASSIFY_MODEL_1[1], graph)
-    #g_data["classifier2"] = Classifier(CLASSIFY_MODEL_2[1], graph)
+    g_data["classifier2"] = Classifier(CLASSIFY_MODEL_2[1], graph)
     g_data["segmenter"] = Segmenter(SEGMENTER_MODEL_PATH, graph)
     g_data["hash_similarity"] = ImageSimilarity(HASH_IMG_DIR, preprocess.preprocess, MINIVGG_MODEL_PATH, graph)
     g_data["labels"] = Labels(LABEL_FILES)
@@ -68,7 +68,9 @@ def route_api_query_image():
     patch = util.extract_patch(filtered_img, (translated_patch_coordinates["y"], translated_patch_coordinates["x"]), preprocess.PATCH_SIZE)
 
     filtered_img = preprocess.preprocess(filtered_img)
-    prob = g_data["classifier1"].classify(filtered_img)
+    prob1 = g_data["classifier1"].classify1(filtered_img)
+    color_patch = cv2.merge((patch, patch, patch))
+    prob2 = g_data["classifier2"].classify2(color_patch)
 
     similarities = g_data["hash_similarity"].query_image(patch)
     similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
@@ -77,7 +79,8 @@ def route_api_query_image():
     res = {
         "filtered_img": img_b64.decode("utf-8"),
         "patch": patch_b64.decode("utf-8"),
-        "probability": prob,
+        "probability1": prob1,
+        "probability2": prob2,
         "similar_images": similarities,
     }
     return jsonify(res)

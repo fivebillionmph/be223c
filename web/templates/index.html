@@ -46,7 +46,8 @@
             <div class="col-md-6">
                 <div class="result-box">
                     <h6>Probability of response to immunotherapy</h6>
-                    <span v-bind:class="{'text-success': result.probability >= 0.5, 'text-danger': result.probability < 0.5}">${ probString(result.probability) }</span>
+                    UNET based classifier: <span v-bind:class="{'text-success': result.probability1 >= 0.5, 'text-danger': result.probability1 < 0.5}">${ probString(result.probability1) }</span>
+                    VGG16 based classifier: <span v-bind:class="{'text-success': result.probability2 >= 0.5, 'text-danger': result.probability2 < 0.5}">${ probString(result.probability2) }</span>
                 </div>
                 <div class="result-box">
                     <h6>Filtered image</h6>

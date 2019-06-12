@@ -11,13 +11,19 @@ class Classifier:
         self.model = keras.models.load_model(filename)
         self.graph = graph
 
-    def classify(self, img):
+    def classify1(self, img):
         with self.graph.as_default():
             input_size = ( int(self.model.inputs[0].shape[1]), int(self.model.inputs[0].shape[2]) )
             img = cv2.resize(img, (input_size[1], input_size[0]))
             img = np.expand_dims(img, axis=-1)
             img = np.expand_dims(img, axis=0)
             return float(self.model.predict(img)[0])
+
+    def classify2(self, img):
+        with self.graph.as_default():
+            input_size = ( int(self.model.inputs[0].shape[1]), int(self.model.inputs[0].shape[2]) )
+            img = cv2.resize(img, (input_size[1], input_size[0]))
+            return float(self.model.predict(np.array([img]))[0][0])
 
 class Segmenter:
     def __init__(self, filename, graph):
