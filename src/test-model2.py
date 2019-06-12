@@ -19,7 +19,7 @@ def main():
 
     graph = tf.get_default_graph()
     segmenter = model.Segmenter(seg_model_file, graph)
-    classifier = model.Classifier(model_file, graph)
+    classifier = model.Classifier2(model_file, graph)
 
     file_data = []
     with open(test_labels) as f:
@@ -35,7 +35,7 @@ def main():
             img = segmenter.segmenter(img)
             patch_coords = util.find_lesion_coordiates(np.array(lesion_mask))
             patch = util.extract_patch(np.array(img), patch_coords, preprocess.PATCH_SIZE)
-            prediction = classifier.classify2(patch)
+            prediction = classifier.classify(patch)
             line.append(prediction)
             file_data.append(line)
 

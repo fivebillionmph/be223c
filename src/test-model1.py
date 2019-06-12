@@ -17,7 +17,7 @@ def main():
 
     graph = tf.get_default_graph()
     segmenter = model.Segmenter(seg_model_file, graph)
-    classifier = model.Classifier(model_file, graph)
+    classifier = model.Classifier1(model_file, graph)
 
     file_data = []
     with open(test_labels) as f:
@@ -31,7 +31,7 @@ def main():
             img = preprocess.preprocess(np.array(img))
             img = segmenter.segmenter(img)
             img = preprocess.preprocess(np.array(img))
-            prediction = classifier.classify1(img)
+            prediction = classifier.classify(img)
             line.append(prediction)
             file_data.append(line)
 
