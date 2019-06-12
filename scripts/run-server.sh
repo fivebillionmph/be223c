@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../src"
 
-FLASK_APP=src/server.py flask run --host=0.0.0.0 -p 8085
+python server.py

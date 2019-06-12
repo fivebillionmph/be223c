@@ -9,8 +9,9 @@ from keras.preprocessing.image import img_to_array
 from sklearn.model_selection import KFold
 from scipy import ndimage
 import matplotlib.pyplot as plt
+import random
 
-
+random.seed(7)
 
 def normalize(img):
     # Normalize the images in the range of 0 to 1 (converted into float64)
@@ -648,14 +649,14 @@ def read_patch_rvs_test(img,mask,patch_size=(64,64)):
 
 
 def gray2RGB(im):
-## convert a 2-D numpy array (or a list of 2-D numpy array)to 3-channel numpy array (or a list of 3-channel numpy array)
+## convert a 2-D numpy array to 3-channel numpy array
 ## im (numpy array): (row,col)
 
 ## example:
 #   im = cv2.imread('../im.png','cv2.IMREAD_GRAYSCALE')
 #   im2 = gray2RGB(im)   #im2 (row,col,3)
 
-    return np.stack( [np.array(im)] * 3, axis=-1 ) 
+    return np.stack( [im] * 3, axis=-1 ) 
 
 
 
