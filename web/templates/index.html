@@ -7,6 +7,15 @@
     .similar-img {
         max-height: 200px;
     }
+    .scroll-y {
+        height: 600px;
+        overflow-y: scroll;
+    }
+    .result-box {
+        border: grey solid 1px;
+        padding: 1rem;
+        margin: 1rem;
+    }
 </style>
 <div id ="app">
     <div class="container">
@@ -25,29 +34,49 @@
                     <h4 v-show="!image_point" class="text-danger">Select the node on the canvas</h4>
                     <canvas id="canvas-image-region" v-bind:width="transform_size[0]" v-bind:height="transform_size[1]"></canvas>
                 </div>
-                <div v-if="result">
-                    <h4>Probability: ${ result.probability }</h4>
-                    <h4>Filtered image:</h4>
+            </div>
+            <div class="col-md-6">
+            </div>
+        </div>
+        <hr v-if="result"/>
+        <div class="row" v-if="result">
+            <div class="col-md-12">
+                <h4>Results</h4>
+            </div>
+            <div class="col-md-6">
+                <div class="result-box">
+                    <h6>Probability of response to immunotherapy</h6>
+                    <span v-bind:class="{'text-success': result.probability >= 0.5, 'text-danger': result.probability < 0.5}">${ probString(result.probability) }</span>
+                </div>
+                <div class="result-box">
+                    <h6>Filtered image</h6>
                     <img class="img-responsive similar-img" v-bind:src="'data:image/png;base64,' + result.filtered_img" />
-                    <h4>Patch</h4>
+                    <p>This is the image after normalization and automatic lung segmentation.</p>
+                </div>
+                <div class="result-box">
+                    <h6>Patch</h6>
                     <img class="img-responsive similar-img" v-bind:src="'data:image/png;base64,' + result.patch" />
+                    <p>This is the manually selected lesion patch given to the content based retrieval module and the classifier model (after normalization and segmentation).</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div v-if="result">
-                    <h4>Similar lesions:</h4>
-                    <table class="table">
-                        <tbody>
-                            <tr v-for="image in result.similar_images">
-                                <td><strong>${ image.similarity }</strong></td>
-                                <td>
-                                    <span v-show="image.response">Responds to immunotherapy</span>
-                                    <span v-show="!image.response">No response to immunotherapy</span>
-                                </td>
-                                <td><img class="img-responsive similar-img" v-bind:src="'/similar-images/' + image.name" /></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div>
+                    <h6 v-show="result.similar_images.length > 0">Similar lesions (${ result.similar_images.length }):</h6>
+                    <h6 v-show="result.similar_images.length == 0">No similar lesions found</h6>
+                    <div class="scroll-y">
+                        <table class="table">
+                            <tbody>
+                                <tr v-for="image in result.similar_images">
+                                    <td><strong>${ image.similarity }</strong></td>
+                                    <td>
+                                        <span class="text-success" v-show="image.response">Responds to immunotherapy</span>
+                                        <span class="text-danger" v-show="!image.response">No response to immunotherapy</span>
+                                    </td>
+                                    <td><img class="img-responsive similar-img" v-bind:src="'/similar-images/' + image.name" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

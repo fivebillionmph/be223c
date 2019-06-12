@@ -107,6 +107,9 @@ var app = new Vue({
         submitable: function() {
             return this.image_file && this.image_data && this.image_point;
         },
+        probString: function(prob) {
+            return (Math.round(prob * 1000) / 1000).toString();
+        },
     },
 });
 
