@@ -7,7 +7,7 @@ Required packages:
     
     
 This script provides directory set up and automated segmentation using dicom files. 
-Note first run creates folders, after which ''' must be removed and folder module 
+Note first run creates folders, after which ''' must be removed and the folder module 
 hashed to run automated segmentation. There is a separate script for manual segmentation 
 support (preprocessing_man.py) that can be substituted for this script.
 
@@ -51,7 +51,7 @@ Attributes:
         
         Returns:
      
-            img: this is a np array used to create the lungmask.
+            img: this is a np array based on Hounsfield units used to create the lungmask.
     
     
     make_lungmask(img): Uses k-means and erosion/dilation to create lungmask and then provide
@@ -184,6 +184,7 @@ def make_lungmask(img, display=False):
     im = Image.fromarray(final*128)
     im = im.convert("L")
     im.save(S)
+    
     return
 
 """ runs preprocessing, sets paths """
