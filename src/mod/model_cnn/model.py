@@ -1,3 +1,9 @@
+###########################################################################################
+## Modelling of UNets
+## Author: Zhaoqiang Wang (github: aaronzq)
+###########################################################################################
+
+
 from keras.models import Sequential
 from keras.layers import Input, Add, ZeroPadding2D, Dense, Activation, Conv2D, MaxPooling2D, Dropout, Flatten, BatchNormalization, GlobalAveragePooling2D, AveragePooling2D, Concatenate, Conv2DTranspose
 from keras import backend as K
