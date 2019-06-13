@@ -48,10 +48,6 @@ var app = new Vue({
                 that.result = response.data;
                 if(that.result.similar_images === undefined) {
                     that.result.similar_images = [];
-                    console.log(Object.keys(that.result));
-                    console.log(that.result["0"]);
-                    console.log(that.result["1"]);
-                    console.log(that.result["2"]);
                 }
                 that.result.similar_images.sort(function(a, b) {
                     if(b.similarity > a.similarity) {
