@@ -180,6 +180,10 @@ class ImageSimilarity:
         
         for i in range(len(hammings)):
             if hammings[i] <= 20:
+                #im = np.where(self.images[i].flatten() > 0, 1, 0)
+                #image_orig = np.where(image_orig.flatten() > 0, 1, 0)
+                #mi = mutual_info_score(im, image_orig)
+                #jac = jaccard_similarity_score(im, image_orig)
                 im = self.images[i] * 255
                 mi = mutual_info_score(im.astype(dtype=np.uint8).flatten(), image_orig.flatten())
                 jac = jaccard_similarity_score(im.astype(dtype=np.uint8).flatten(), image_orig.flatten())
