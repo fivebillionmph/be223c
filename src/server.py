@@ -121,6 +121,7 @@ def route_api_query_image():
 
     translated_patch_coordinates = preprocess.translate_patch_coordinates(filtered_img, request_data["point"])
     patch = util.extract_patch(filtered_img, (translated_patch_coordinates["y"], translated_patch_coordinates["x"]), preprocess.PATCH_SIZE)
+    patch = preprocess.preprocess(patch)
 
     filtered_img = preprocess.preprocess(filtered_img)
     prob1 = g_data["classifier1"].classify(filtered_img)
@@ -128,6 +129,7 @@ def route_api_query_image():
 
     similarities = g_data["hash_similarity"].query_image(patch)
     similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
+
     img_b64 = img_to_base64(filtered_img)
     patch_b64 = img_to_base64(patch)
     res = {

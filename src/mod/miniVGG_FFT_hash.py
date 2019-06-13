@@ -52,9 +52,9 @@ class ImageSimilarity:
             path = opj(images_dir, self.image_names[i])
             
             im = Image.open(path)
-            im = processing_func(np.array(im))
-            im = cv2.resize(im, (128,128))
-            im = im / 255.0
+            im = cv2.resize(np.array(im), (128,128))
+            im = processing_func(im)
+            # im = im / 255.0
             self.images.append(im)
         
         # Returns image numpy array to feed into the model
@@ -117,8 +117,10 @@ class ImageSimilarity:
         """
 
         #image_orig = self.processing_func(np.array(image))
-        image_orig = cv2.resize(image, (128,128))
-        image = image_orig / 255.0
+        image_orig = image * 255
+        image_orig = cv2.resize(image_orig, (128,128))
+        image = image_orig / 255
+        image_orig = image_orig.astype(dtype=np.uint8)
         #print(image.shape)
 
         matches = []
@@ -177,8 +179,11 @@ class ImageSimilarity:
             # https://stackoverflow.com/questions/22736641/xor-on-two-lists-in-python
         
         for i in range(len(hammings)):
-            if hammings[i] <= 40:
-                matches.append({"name": self.image_names[i], "similarity": hammings[i]})
+            if hammings[i] <= 20:
+                im = self.images[i] * 255
+                mi = mutual_info_score(im.astype(dtype=np.uint8).flatten(), image_orig.flatten())
+                jac = jaccard_similarity_score(im.astype(dtype=np.uint8).flatten(), image_orig.flatten())
+                matches.append({"name": self.image_names[i], "similarity": hammings[i], "mutual_info_score": mi, "jaccard_similarity_score": jac})
 
         return matches
 

@@ -75,16 +75,20 @@
                     <h6 v-show="result.similar_images.length == 0">No similar lesions found</h6>
                     <div class="scroll-y">
                         <table class="table">
-                            <thead>
+                            <!--<thead>
                                 <tr>
-                                    <th>Hamming distance</th>
+                                    <th>Score</th>
                                     <th>Response</th>
                                     <th>Lesion</th>
                                 </tr>
-                            </thead>
+                            </thead>-->
                             <tbody>
                                 <tr v-for="image in result.similar_images">
-                                    <td><strong>${ image.similarity }</strong></td>
+                                    <td>
+                                        Hamming distance: ${ image.similarity }<br/>
+                                        Mutual information score: ${ probString(image.mutual_info_score) }<br/>
+                                        Jaccard score: ${ probString(image.jaccard_similarity_score) }
+                                    </td>
                                     <td>
                                         <span class="text-danger" v-show="image.response">Progression</span>
                                         <span class="text-success" v-show="!image.response">No progression</span>
