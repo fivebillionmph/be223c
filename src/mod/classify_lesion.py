@@ -1,3 +1,8 @@
+'''
+Training, testing of encoder-based lesion classificaiton model
+Author: Zhaoqiang Wang (github: aaronzq)
+'''
+
 from model_cnn.model import vgg16_classify, createModel_encoder
 from util_cnn.util import read_data_random_view, read_data_unet, normalize
 from keras.preprocessing.image import ImageDataGenerator
@@ -141,17 +146,6 @@ def test_encoder_classify(label_path, image_path, mask_path, load_path, save_pat
     accuracy = accuracy_score(test_label,test_results>0.5)
     cm = confusion_matrix(test_label,test_results>0.5)    
 
-    # for i in range(len(test_results)):
-    #     test_im = np.float64(test_results[i,:,:,0]>.5)
-    #     gt_im = test_mask[i,:,:,0]
-    #     intersection = np.sum(np.logical_and(test_im, gt_im))
-    #     union = np.sum(np.logical_or(test_im, gt_im))
-    #     jaccard.append( intersection / union )
-    #     dice.append( 2*intersection/( np.sum(test_im) + np.sum(gt_im) ) )
-
-    #     cv2.imwrite(join(save_path+'/net/'+str(i)+'.tif'),np.uint8(255*test_im))
-    #     cv2.imwrite(join(save_path+'/gt/'+str(i)+'.tif'),np.uint8(255*gt_im))
-    
     print('Accuracy : {}; AUC: {}'.format(accuracy, AUC)  )
     plt.show()
 
@@ -164,24 +158,26 @@ def test_encoder_classify(label_path, image_path, mask_path, load_path, save_pat
 
 
 
-
-## export the following functions
-
-
-
+###########################################################################################
+########################### export the following functions ################################
+###########################################################################################
 
 
+
+
+def infer_encoder_classify(img, model_path):
 ## predict a probability of progression from a (lung-segmented) lung image
-# img (2d numpy array): lung images on grayscale
-# model_path (str): path to the model
+
+## Args: img: 2d numpy array, lung-segmented lung images on grayscale
+##       model_path: str of path to the model
 
 # return: progression (float):  probability of progression
-def infer_encoder_classify(img, model_path):
-    ## ----------------------------- example ---------------------------------------
-    ##     test_image_path = '../Dataset/Test-Seg-Man/'
-    ##     img = cv2.imread( join(test_image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
-    ##     progression = infer_encoder_classify(img, join(save_path, 'lesion_classification.model'))
-    ## -----------------------------------------------------------------------------
+
+## ----------------------------- example ---------------------------------------
+##     test_image_path = '../Dataset/Test-Seg-Man/'
+##     img = cv2.imread( join(test_image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
+##     progression = infer_encoder_classify(img, join(save_path, 'lesion_classification.model'))
+## -----------------------------------------------------------------------------
 
 
     model = load_model(model_path)
@@ -193,7 +189,9 @@ def infer_encoder_classify(img, model_path):
 
     return float(model.predict(img_rz)[0])
 
-
+###########################################################################################
+###########################################################################################
+###########################################################################################
 
 
 
