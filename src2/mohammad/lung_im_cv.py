@@ -1,5 +1,8 @@
-# this code gets only the images to trian the pre-trained model using the cross validation technique
-# author: Mohammadali Alidoost
+"""
+author: Mohammadali Alidoost
+this code gets only the images to trian the pre-trained model using the cross validation technique
+"""
+
 ############################################################################################################################################################################################
 # import all necessary libraries
 
@@ -57,8 +60,7 @@ test_dir = '/home/mohammadali/Downloads/Run/Test-Seg-Man'
 csvTest = '/home/mohammadali/Downloads/Run/Test.csv'
 ############################################################################################################################################################################################
 def main():
-
-    # train the model
+    """ train the model """
 
     # preparing the data to train
 

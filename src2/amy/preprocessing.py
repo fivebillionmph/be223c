@@ -31,7 +31,7 @@ Todo:
     
 """
 
-# packages
+""" packages """
 
 import os
 import sys
@@ -44,15 +44,14 @@ from skimage import measure
 import matplotlib.pyplot as plt
 from PIL import Image
 
-# sets up folders that will be used
 
 def folders():
+    """ sets up folders that will be used """
     os.makedirs('Images/')
-    os.makedirs('
-              
-# uses metadata from dicom file to convert pixels to hounsfield units
+
 
 def get_pixels_hu(data, slope, intercept):
+    """ uses metadata from dicom file to convert pixels to hounsfield units """
     image = data.astype(np.int16)
     image[image == -2000] = 0
     intercept = intercept
@@ -67,9 +66,9 @@ def get_pixels_hu(data, slope, intercept):
     
     return img
 
-# uses hu values to make lungmask and perform segmentation
 
 def make_lungmask(img, display=False):
+    """ uses hu values to make lungmask and perform segmentation """
     row_size= img.shape[0]
     col_size = img.shape[1]
     
@@ -78,7 +77,7 @@ def make_lungmask(img, display=False):
     img = img-mean
     img = img/std
 
-# uses hounsfield values near lungs to normalize images
+    # uses hounsfield values near lungs to normalize images
 
     middle = img[int(col_size/5):int(col_size/5*4),int(row_size/5):int(row_size/5*4)] 
     mean = np.mean(middle)  
@@ -87,14 +86,14 @@ def make_lungmask(img, display=False):
     img[img==max]=mean
     img[img==min]=mean
     
-# uses kmeans to separate foreground (soft tissue / bone) and background (lung/air)
+    # uses kmeans to separate foreground (soft tissue / bone) and background (lung/air)
 
     kmeans = KMeans(n_clusters=2).fit(np.reshape(middle,[np.prod(middle.shape),1]))
     centers = sorted(kmeans.cluster_centers_.flatten())
     threshold = np.mean(centers)
     thresh_img = np.where(img<threshold,1.0,0.0)
 
-# performs erosion and dilation
+    # performs erosion and dilation
 
     eroded = morphology.erosion(thresh_img,np.ones([3,3]))
     dilation = morphology.dilation(eroded,np.ones([8,8]))
@@ -110,7 +109,7 @@ def make_lungmask(img, display=False):
     mask = np.ndarray([row_size,col_size],dtype=np.int8)
     mask[:] = 0
 
-# makes mask
+    # makes mask
 
     for N in good_labels:
         mask = mask + np.where(labels==N,1,0)
@@ -119,7 +118,7 @@ def make_lungmask(img, display=False):
     
     return final
 
-# runs preprocessing, sets paths
+""" runs preprocessing, sets paths """
 
 ospath = os.getcwd()
 os.chdir('/path/')    
@@ -130,12 +129,12 @@ seg = "Seg/"
 proc = "Preproc/"
 
 
-# uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images
+""" uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images """
 
 df = pd.read_csv(csv, header=0)
 X = df.iloc[0:1,0]
     
-# runs loop
+""" runs loop """
 
 for filename in X:
     I = path + filename + '.dcm'
@@ -151,7 +150,7 @@ for filename in X:
 
 
 
-# shows and saves output
+    # shows and saves output
 
     plt.imshow(final)
     im = Image.fromarray(final*128)

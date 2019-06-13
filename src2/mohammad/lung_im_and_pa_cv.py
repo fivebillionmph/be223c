@@ -1,6 +1,10 @@
-# this code gets both the images and patches to trian the pre-trained model using the cross validation technique
-# author: Mohammadali Alidoost
+"""
+author: Mohammadali Alidoost
+this code gets both the images and patches to trian the pre-trained model using the cross validation technique
+"""
+
 ############################################################################################################################################################################################
+
 # import all necessary libraries
 
 import os
@@ -61,8 +65,7 @@ test_dir_patch = '/home/mohammadali/Downloads/Run/Test-Patch'
 csvTest = '/home/mohammadali/Downloads/Run/Test.csv'
 ############################################################################################################################################################################################
 def main():
-
-    # train the model
+    """ train the model """
 
     # preparing the data to train
 

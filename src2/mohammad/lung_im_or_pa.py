@@ -1,6 +1,10 @@
-# this code gets either the images or the patches to trian the pre-trained model
-# author: Mohammadali Alidoost
+"""
+author: Mohammadali Alidoost
+this code gets either the images or the patches to trian the pre-trained model
+"""
+
 ############################################################################################################################################################################################
+
 # import all necessary libraries
 
 import os
@@ -65,8 +69,7 @@ test_dir_patch = '/home/mohammadali/Downloads/Run/Test-Patch'
 csvTest = '/home/mohammadali/Downloads/Run/Test.csv'
 ############################################################################################################################################################################################
 def main():
-
-    # train the model
+    """ train the model """
 
     # preparing the data to train
 
