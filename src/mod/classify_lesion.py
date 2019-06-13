@@ -166,18 +166,20 @@ def test_encoder_classify(label_path, image_path, mask_path, load_path, save_pat
 
 
 def infer_encoder_classify(img, model_path):
-## predict a probability of progression from a (lung-segmented) lung image
-
-## Args: img: 2d numpy array, lung-segmented lung images on grayscale
-##       model_path: str of path to the model
-
-# return: progression (float):  probability of progression
-
-## ----------------------------- example ---------------------------------------
-##     test_image_path = '../Dataset/Test-Seg-Man/'
-##     img = cv2.imread( join(test_image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
-##     progression = infer_encoder_classify(img, join(save_path, 'lesion_classification.model'))
-## -----------------------------------------------------------------------------
+    """
+    predict a probability of progression from a (lung-segmented) lung image
+    
+    Args: img: 2d numpy array, lung-segmented lung images on grayscale
+           model_path: str of path to the model
+    
+    return: progression (float):  probability of progression
+    
+    ----------------------------- example ---------------------------------------
+        test_image_path = '../Dataset/Test-Seg-Man/'
+        img = cv2.imread( join(test_image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
+        progression = infer_encoder_classify(img, join(save_path, 'lesion_classification.model'))
+    -----------------------------------------------------------------------------
+    """
 
 
     model = load_model(model_path)
