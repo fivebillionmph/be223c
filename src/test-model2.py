@@ -1,3 +1,7 @@
+"""
+written by James Go
+"""
+
 import csv
 import sys
 from mod import model
@@ -10,6 +14,18 @@ import numpy as np
 from mod import util
 
 def main():
+    """
+    this script creates a results.csv in the output directory, which is used by the test-model-stats.py script for creating results graphs and statistics
+    this scripts is for testing the VGG16 based model
+
+    CLI Args:
+        1: the labels file for the test set of subjects
+        2: the directory of PNG image slices
+        3: the directory of lesion masks
+        4: the output directory for the results
+        5: the classifier model file
+        6: the lung segmentation model file
+    """
     test_labels = sys.argv[1]
     image_dir = sys.argv[2]
     lesion_mask_dir = sys.argv[3]

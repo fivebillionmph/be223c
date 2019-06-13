@@ -1,3 +1,7 @@
+"""
+written by James Go
+"""
+
 import sys
 import csv
 from os.path import join as opj
@@ -6,6 +10,14 @@ import matplotlib.pyplot as plt
 import json
 
 def main():
+    """
+    this scripts looks in a specified directory for a results.csv file which is the predicted vs true values for a model
+    creates AUC stats, ROC curve and a precision/recall graph
+    the test results directory is used by the server for information on each of the two models
+
+    CLI Args:
+        1: the test directory.
+    """
     test_dir = sys.argv[1]
     pred_file = opj(test_dir, "results.csv")
     resp = []
