@@ -1,6 +1,40 @@
+# -*- coding: utf-8 -*-
+"""
+Author: Amy Cummings
+
+This module provides directory set up, creates png files from 
+
+Example:
+    $ python preprocessing.py /path/to/directory/
+
+Attributes:
+    
+    folders: 
+    
+    get_pixels_hu: 
+
+Todo:
+    1. Run command, which creates folders.
+    
+    2. Place original images in 'Images/' folder. Note if automated segmentation
+       is not desired, manually created masks may be placed in 'Preproc/' folder.
+    
+    3. Create CSV with names of images files without extension in first column
+       and binary outcome variable in second.
+       
+       Example:
+            A012345,1
+            
+    3. Hash folder command and unhash remaining functions, rerun script. Note if 
+       manually created masks are provided, only preproc function should be unhashed.
+    
+    
+"""
+
 # packages
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import pydicom as dicom
@@ -10,7 +44,12 @@ from skimage import measure
 import matplotlib.pyplot as plt
 from PIL import Image
 
+# sets up folders that will be used
 
+def folders():
+    os.makedirs('Images/')
+    os.makedirs('
+              
 # uses metadata from dicom file to convert pixels to hounsfield units
 
 def get_pixels_hu(data, slope, intercept):
@@ -110,8 +149,7 @@ for filename in X:
     slope = ds.RescaleSlope
     intercept = ds.RescaleIntercept
 
-    img = get_pixels_hu(data, slope, intercept)
-    final = make_lungmask(img)
+
 
 # shows and saves output
 
@@ -124,3 +162,11 @@ for filename in X:
     ds.PixelData = lungs.tobytes()
     ds.Rows, ds.Columns = lungs.shape
     ds.save_as(P)
+
+# runs code, 
+    
+folders()
+#preproc()
+#makepng()
+#img = get_pixels_hu(data, slope, intercept)
+#final = make_lungmask(img)
