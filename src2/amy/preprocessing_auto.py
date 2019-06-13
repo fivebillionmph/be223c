@@ -75,10 +75,9 @@ Todo:
        Example:
             A012345,1
             
-    4. Remove ''' in the call function section and hash folder()  in line.
+    4. Remove ''' in the call function section and hash folder() in line 195.
     
     5. Rerun script.
-    
     
 """
 
@@ -103,7 +102,15 @@ def folders():
 
     return
 
-def
+
+def preproc():
+    ds = dicom.dcmread(I, force=True)
+    data = ds.pixel_array
+    slope = ds.RescaleSlope
+    intercept = ds.RescaleIntercept                      
+    
+    return data, slope, intercept
+
 
 def get_pixels_hu(data, slope, intercept):
     """ uses metadata from dicom file to convert pixels to hounsfield units """
@@ -170,53 +177,39 @@ def make_lungmask(img, display=False):
         mask = mask + np.where(labels==N,1,0)
     mask = morphology.dilation(mask,np.ones([10,10])) # one last dilation
     final = mask * img
-    
-    return final
-
-""" runs preprocessing, sets paths """
-
-ospath = os.getcwd()
-os.chdir('/path/')    
-
-path = "Images/"
-csv = "Master.csv"
-seg = "Seg/"
-proc = "Preproc/"
-
-
-""" uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images """
-
-df = pd.read_csv(csv, header=0)
-X = df.iloc[0:1,0]
-    
-""" runs loop """
-
-for filename in X:
-    I = path + filename + '.dcm'
-    P = proc + filename + '.dcm'
-    S = seg + filename + '.png'
-    image = [I]
-    process = [P]
-    lungs = [S]
-    ds = dicom.dcmread(I, force=True)
-    data = ds.pixel_array
-    slope = ds.RescaleSlope
-    intercept = ds.RescaleIntercept
-
-
-
+        
     # shows and saves output
 
     plt.imshow(final)
     im = Image.fromarray(final*128)
     im = im.convert("L")
     im.save(S)
-    
+    return
 
-# runs code, 
-    
+""" runs preprocessing, sets paths """
+
+ospath = os.getcwd()
+os.chdir(sys.argv[1])    
+
 folders()
-#preproc()
-#makepng()
-#img = get_pixels_hu(data, slope, intercept)
-#final = make_lungmask(img)
+
+'''
+""" uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images """
+
+csv = "Master.csv"
+path = "Images/"
+seg = "Seg/"
+
+df = pd.read_csv(csv, header=0)
+X = df.iloc[:,0]
+    
+""" runs loop """
+
+for filename in X:
+    I = path + filename + '.dcm'
+    S = seg + filename + '.png'
+
+    preproc()
+    img = get_pixels_hu(data, slope, intercept)
+    make_lungmask(img)
+'''
