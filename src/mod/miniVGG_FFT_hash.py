@@ -179,7 +179,7 @@ class ImageSimilarity:
             # https://stackoverflow.com/questions/22736641/xor-on-two-lists-in-python
         
         for i in range(len(hammings)):
-            if hammings[i] <= 20:
+            if hammings[i] <= 5:
                 #im = np.where(self.images[i].flatten() > 0, 1, 0)
                 #image_orig = np.where(image_orig.flatten() > 0, 1, 0)
                 #mi = mutual_info_score(im, image_orig)
