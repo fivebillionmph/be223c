@@ -34,10 +34,10 @@
             <div class="col-md-6">
                 <h6>About this project</h6>
                 <p>This project attempts to predict if a lung cancer patient will respond to immunotherapy treatment.  Lung CT scans were taken before and after treatment with anti-PD1 immunotherapy.</p>
-                <p>Two deep learning models were trained on the pre-treatment images to classify if the disease will pregress or not: A UNET based model which classifies against the entire image and a VGG16 based model which classifies based on the selected patch.</p>
+                <p>Three deep learning models were trained on the pre-treatment images to classify if the disease will pregress or not: A encoder based model which classifies against the entire image, a VGG16 based model which classifies based on the selected patch and a VGG16 based model which classifies on the whole image.</p>
                 <p>A content based retrieval based on miniVGG and image similarity hashing was also trained so similar lesions can be returned.</p>
                 <p>An automatic lung segmentation model was also created so that users do not need to segment the lungs out of surrounding tissue themselves.</p>
-                <p><a href="/model/1">UNET based model description</a></p>
+                <p><a href="/model/1">Encoder based model description</a></p>
                 <p><a href="/model/2">VGG16 based patch model description</a></p>
                 <p><a href="/model/3">VGG16 based whole image model description</a></p>
                 <h6>How to use</h6>
@@ -57,7 +57,7 @@
             <div class="col-md-6">
                 <div class="result-box">
                     <h6>Probability of disease progression</h6>
-                    UNET based classifier: <span v-bind:class="{'text-danger': result.probability1 >= 0.5, 'text-success': result.probability1 < 0.5}">${ probString(result.probability1) }</span><br/>
+                    Encoder based classifier: <span v-bind:class="{'text-danger': result.probability1 >= 0.5, 'text-success': result.probability1 < 0.5}">${ probString(result.probability1) }</span><br/>
                     VGG16 based patch classifier: <span v-bind:class="{'text-danger': result.probability2 >= 0.5, 'text-success': result.probability2 < 0.5}">${ probString(result.probability2) }</span><br/>
                     VGG16 based whole image classifier: <span v-bind:class="{'text-danger': result.probability3 >= 0.5, 'text-success': result.probability3 < 0.5}">${ probString(result.probability3) }</span>
                 </div>

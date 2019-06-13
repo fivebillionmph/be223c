@@ -55,6 +55,11 @@ var app = new Vue({
                     } else if(b.similarity < a.similarity) {
                         return 1;
                     }
+                    if(b.mutual_info_score > a.mutual_info_score) {
+                        return 1;
+                    } else if(b.mutual_info_score < a.mutual_info_score) {
+                        return -1;
+                    }
                     return 0;
                 });
             }, function(err) {
