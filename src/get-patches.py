@@ -1,5 +1,5 @@
 """
-written by James Go
+Author: James Go
 """
 
 from mod import util, preprocess

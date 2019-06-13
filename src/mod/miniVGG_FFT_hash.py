@@ -1,4 +1,7 @@
-""" Mini-VGG FFT Hash """
+"""
+Author: Joseph Tsung
+Mini-VGG FFT Hash
+"""
 # import the necessary packages
 from PIL import Image
 import matplotlib.pyplot as plt

@@ -1,7 +1,7 @@
-###########################################################################################
-## Utility function for CNN models
-## Author: Zhaoqiang Wang (github: aaronzq)
-###########################################################################################
+"""
+Utility function for CNN models
+Author: Zhaoqiang Wang (github: aaronzq)
+"""
 
 import pandas as pd
 import numpy as np
@@ -20,18 +20,18 @@ import matplotlib.pyplot as plt
 ####################Functions for external usage start from line 264 ######################
 ###########################################################################################
 def normalize(img):
-    # Normalize the images in the range of 0 to 1 (converted into float64)
+    """ Normalize the images in the range of 0 to 1 (converted into float64) """
 
     return (img-np.min(img))/(np.max(img)-np.min(img))
     # return img / np.max(img)
 
 def normalize_u8(img):
-    # Normalize the images in the range of 0 to 255 (converted into uint8)
+    """ Normalize the images in the range of 0 to 255 (converted into uint8) """
 
     return np.uint8( 255*normalize(img) )    
 
 def bbox(img):
-    # find the bounding box of the lung in ct slices
+    """ find the bounding box of the lung in ct slices """
     
     rows = np.any(img, axis=1)
     cols = np.any(img, axis=0)
@@ -41,7 +41,8 @@ def bbox(img):
     return rmin, rmax, cmin, cmax
 
 def rotate(image, angle, center=None, scale=1.0):
-    # grab the dimensions of the image
+    """ grab the dimensions of the image """
+
     (h, w) = image.shape[:2]
 
     # if the center is None, initialize it as the center of
@@ -57,7 +58,8 @@ def rotate(image, angle, center=None, scale=1.0):
     return rotated
 
 def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
+    """ grab the dimensions of the image and then determine the """
+
     # center
     (h, w) = image.shape[:2]
     (cX, cY) = (w // 2, h // 2)
@@ -81,7 +83,7 @@ def rotate_bound(image, angle):
     return cv2.warpAffine(image, M, (nW, nH))
 
 def read_label(csv_file):
-    # read image name and store in list
+    """ read image name and store in list """
 
     label_csv = pd.DataFrame( pd.read_csv(csv_file) )
 
@@ -101,12 +103,14 @@ def read_label(csv_file):
 
  
 def read_image(file_name_list, image_src_path, mask_src_path, size):
-# read all images and masks according to csvfile 
+    """
+    read all images and masks according to csvfile 
+    
+    Returns: 
+          image_list: (list) list of numpy arrays of image with specified size
+          mask_list: (list) list of numpy arrays of mask with specified size 
+    """
 
-# OUTPUT: 
-#       image_list: (list) list of numpy arrays of image with specified size
-#       mask_list: (list) list of numpy arrays of mask with specified size 
-#  
     image_list = list()
     mask_list = list()
 
@@ -128,7 +132,7 @@ def read_image(file_name_list, image_src_path, mask_src_path, size):
 
 
 def augment_label(label, n):
-## Simply replicate labels by n times
+    """ Simply replicate labels by n times """
 
     return [label]*n
 
@@ -136,11 +140,14 @@ def augment_label(label, n):
 
 
 def augment_rotate(img, n):
-## rotate the images n times and wrap them in a list, rotation will crop corners
-## INPUT: 
-##      image ( row x col)
-## OUTPUT: 
-##      list (n) with each element as (row x col)
+    """
+    rotate the images n times and wrap them in a list, rotation will crop corners
+
+    Args: 
+         image ( row x col)
+    Returns: 
+         list (n) with each element as (row x col)
+    """
     
     aug_patch = list()
 
@@ -153,10 +160,12 @@ def augment_rotate(img, n):
 
 
 def find_lesion_coordiates(mask):
-## INPUT:
-##      mask: numpy array 2d 
-## OUTPUT:
-##      coordianates: tuple (row,col)
+    """
+    Args:
+         mask: numpy array 2d 
+    Returns:
+         coordianates: tuple (row,col)
+    """
 
     row,col = ndimage.measurements.center_of_mass(mask) 
 
@@ -164,13 +173,16 @@ def find_lesion_coordiates(mask):
 
 
 def extract_patch(img,coor,patch_size):
-## extract patch from image according to coordinates
-## INPUT
-##      img: numpy array (M,N) 
-##      coor: tuple (row,col) 
-##      patch_size: int (has to be smaller than img)
-## OUTPUT
-##      patch: numpy array (patch_size,patch_size)
+    """
+    extract patch from image according to coordinates
+
+    Args:
+         img: numpy array (M,N) 
+         coor: tuple (row,col) 
+         patch_size: int (has to be smaller than img)
+    Returns:
+         patch: numpy array (patch_size,patch_size)
+    """
 
 
     rmax, cmax = img.shape
@@ -199,13 +211,17 @@ def extract_patch(img,coor,patch_size):
 
 
 def generate_patch_from_img(img,coor,patch_size):
-## extract patch from image according to coordinates (rewrite of extract_patch())
-## INPUT
-##      img: numpy array (M,N) 
-##      coor: tuple (row,col) 
-##      patch_size: int (has to be smaller than img)
-## OUTPUT
-##      patch: numpy array (patch_size,patch_size)
+    """
+    extract patch from image according to coordinates (rewrite of extract_patch())
+
+    Args:
+         img: numpy array (M,N) 
+         coor: tuple (row,col) 
+         patch_size: int (has to be smaller than img)
+
+    Returns:
+         patch: numpy array (patch_size,patch_size)
+    """
 
 
     return extract_patch(img, coor, patch_size)
@@ -214,15 +230,18 @@ def generate_patch_from_img(img,coor,patch_size):
 
 
 def generate_patch_from_img_random_views(img,coor,patch_size):
-## Augment the patches with random view sampling
-##      Shifting, Rotating, Scaling
-## INPUT
-##      img: numpy array (M,N) 
-##      coor: tuple (row,col) 
-##      patch_size: int (has to be smaller than img)
-## OUTPUT
-##      patch_list: list (including N patches)
-##      N: int (augmentation times)    
+    """
+    Augment the patches with random view sampling
+         Shifting, Rotating, Scaling
+
+    Args:
+         img: numpy array (M,N) 
+         coor: tuple (row,col) 
+         patch_size: int (has to be smaller than img)
+    Returns:
+         patch_list: list (including N patches)
+         N: int (augmentation times)    
+    """
     
     shift_step = round(0.2 * patch_size[0])
     shifting_r =  [-shift_step, 0, shift_step]
@@ -263,21 +282,22 @@ def generate_patch_from_img_random_views(img,coor,patch_size):
 ###########################################################################################
 def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,split_ratio=0.2,aug_rotate=6):
 
-## read data for proposed unet-based method
-## No option for K-Fold; No option for RBG/gra output (one channel in default); 
-## Split on patient ID; Augmentation: rotation(crop corners)
-
-## Args: label_path: string of path to the csv file
-##       image_folder_path: string of path to the image folder
-##       mask_folder_path: string of path to the mask folder
-##       input_size: tuple of expected input size for model, output size for this function (row,col)
-##       split_ratio: float, split ratio between training and validation dataset
-##       aug_rotate: int, how many times of augmentation
-
-## return:
-##      numpy array: train_img (N x row x col x 1), train_mask (N x row x col x 1), train_label (N,)
-##      numpy array: val_img (N x row x col x 1), val_mask (N x row x col x 1), val_label (N,)
-
+    """
+    read data for proposed unet-based method
+    No option for K-Fold; No option for RBG/gra output (one channel in default); 
+    Split on patient ID; Augmentation: rotation(crop corners)
+    
+    Args: label_path: string of path to the csv file
+          image_folder_path: string of path to the image folder
+          mask_folder_path: string of path to the mask folder
+          input_size: tuple of expected input size for model, output size for this function (row,col)
+          split_ratio: float, split ratio between training and validation dataset
+          aug_rotate: int, how many times of augmentation
+    
+    return:
+         numpy array: train_img (N x row x col x 1), train_mask (N x row x col x 1), train_label (N,)
+         numpy array: val_img (N x row x col x 1), val_mask (N x row x col x 1), val_label (N,)
+    """
 
 
     ## read all the data
@@ -327,29 +347,30 @@ def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,spli
 
 
 def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,aug_rotate=6,kfold=1,outchannels=3):
-
-## read data for proposed dual inputs VGG 16 method
-##      kfold: 1,2,3,4,5...
-##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
-##      Split on patient ID; Augmentation: rotation(crop corners)
-
-## Args: label_path: string of path to the csv file
-##       image_folder_path: string of path to the image folder
-##       mask_folder_path: string of path to the mask folder
-##       input_size1: tuple of expected input size of image for model, output size of image for this function (row,col)
-##       input_size2: tuple of expected input size of patch for model, output size of patch for this function (row,col)
-##       split_ratio: float, split ratio between training and validation dataset
-##       aug_rotate: int, how many times of augmentation
-##       kfold: int, how many folds in cross validation
-##       outchannels: int, how many channels the output image should contain
-
-## return:
-##      if not KFold:
-##      numpy array: train_img1 (N x row1 x col1 x outchannels), train_img2 (N x row2 x col2 x outchannels), train_label (N,)
-##      numpy array: val_img1 (N x row1 x col1 x outchannels), val_img2 (N x row2 x col2 x outchannels), val_label (N,)
-##      if KFold:
-##      numpy array: train_img1 (K x N x row1 x col1 x outchannels), train_img2 (K x N x row2 x col2 x outchannels), train_label (K, N)
-##      numpy array: val_img1 (K x N x row1 x col1 x outchannels), val_img2 (K x N x row2 x col2 x outchannels), val_label (K, N) 
+    """
+    read data for proposed dual inputs VGG 16 method
+         kfold: 1,2,3,4,5...
+         Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
+         Split on patient ID; Augmentation: rotation(crop corners)
+    
+    Args: label_path: string of path to the csv file
+          image_folder_path: string of path to the image folder
+          mask_folder_path: string of path to the mask folder
+          input_size1: tuple of expected input size of image for model, output size of image for this function (row,col)
+          input_size2: tuple of expected input size of patch for model, output size of patch for this function (row,col)
+          split_ratio: float, split ratio between training and validation dataset
+          aug_rotate: int, how many times of augmentation
+          kfold: int, how many folds in cross validation
+          outchannels: int, how many channels the output image should contain
+    
+    return:
+         if not KFold:
+         numpy array: train_img1 (N x row1 x col1 x outchannels), train_img2 (N x row2 x col2 x outchannels), train_label (N,)
+         numpy array: val_img1 (N x row1 x col1 x outchannels), val_img2 (N x row2 x col2 x outchannels), val_label (N,)
+         if KFold:
+         numpy array: train_img1 (K x N x row1 x col1 x outchannels), train_img2 (K x N x row2 x col2 x outchannels), train_label (K, N)
+         numpy array: val_img1 (K x N x row1 x col1 x outchannels), val_img2 (K x N x row2 x col2 x outchannels), val_label (K, N) 
+    """
     
     ## read all the data
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
@@ -468,29 +489,30 @@ def read_data_dual_input(label_path,image_folder_path,mask_folder_path,input_siz
 
 
 def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_size1,input_size2=(64,64),split_ratio=0.2,kfold=1,outchannels=3):
-
-## read data for proposed patch input VGG 16 with random view sampling method
-##      kfold: 1,2,3,4,5...
-##      Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
-##      Split on patient ID; Augmentation: random view sampling
-
-## Args: label_path: string of path to the csv file
-##       image_folder_path: string of path to the image folder
-##       mask_folder_path: string of path to the mask folder
-##       input_size1: tuple of expected input size of image for model, output size of image for this function (row,col)
-##       input_size2: tuple of expected input size of patch for model, output size of patch for this function (row,col)
-##       split_ratio: float, split ratio between training and validation dataset
-##       aug_rotate: int, how many times of augmentation
-##       kfold: int, how many folds in cross validation
-##       outchannels: int, how many channels the output image should contain
-
-## return
-##      if not KFold:
-##      numpy array: train_img (N x row x col x outchannels), train_label (N,)
-##      numpy array: val_img (N x row x col x outchannels), val_label (N,)
-##      if KFold:
-##      numpy array: train_img (K x N x row x col x outchannels),train_label (K, N)
-##      numpy array: val_img (K x N x row x col x outchannels), val_label (K, N) 
+    """
+    read data for proposed patch input VGG 16 with random view sampling method
+         kfold: 1,2,3,4,5...
+         Option: K-Fold(default: 1, no cross validation) ; outchannels (RBG/gray output) (default: 3 (RGB)); 
+         Split on patient ID; Augmentation: random view sampling
+    
+    Args: label_path: string of path to the csv file
+          image_folder_path: string of path to the image folder
+          mask_folder_path: string of path to the mask folder
+          input_size1: tuple of expected input size of image for model, output size of image for this function (row,col)
+          input_size2: tuple of expected input size of patch for model, output size of patch for this function (row,col)
+          split_ratio: float, split ratio between training and validation dataset
+          aug_rotate: int, how many times of augmentation
+          kfold: int, how many folds in cross validation
+          outchannels: int, how many channels the output image should contain
+    
+    return
+         if not KFold:
+         numpy array: train_img (N x row x col x outchannels), train_label (N,)
+         numpy array: val_img (N x row x col x outchannels), val_label (N,)
+         if KFold:
+         numpy array: train_img (K x N x row x col x outchannels),train_label (K, N)
+         numpy array: val_img (K x N x row x col x outchannels), val_label (K, N) 
+    """
  
 
     ## read all the data
@@ -587,20 +609,19 @@ def read_data_random_view(label_path,image_folder_path,mask_folder_path,input_si
 
 
 def read_image_test(image_path, input_size):
-
-## read a single image
-## args:  image_path: string,the path to the single mask
-##        input_size: tuple, (row,col)
-
-## return: numpy array(float64), the image
-
-## example
-
-##     image_path = '../img.png'
-##     input_size = (224,224)
-##     img = read_image_test(image_path, input_size)  
-
-
+    """
+    read a single image
+    args:  image_path: string,the path to the single mask
+           input_size: tuple, (row,col)
+    
+    return: numpy array(float64), the image
+    
+    example
+    
+        image_path = '../img.png'
+        input_size = (224,224)
+        img = read_image_test(image_path, input_size)  
+    """
 
     img = cv2.imread(image_path , cv2.IMREAD_GRAYSCALE)
     img_rz = cv2.resize(img, (input_size[1],input_size[0]))
@@ -610,21 +631,20 @@ def read_image_test(image_path, input_size):
 
 
 def read_mask_test(mask_path, input_size):
-
-## read a single mask
-## arg: image_path: string,the path to the single mask
-##      input_size: tuple, (row,col)
-
-## return: numpy array(float64), the binary mask
-
-
-## example
-
-##     mask_path = '../mask.png'
-##     input_size = (224,224)
-##     mask = read_mask_test(mask_path, input_size)  
-
-
+    """
+    read a single mask
+    arg: image_path: string,the path to the single mask
+         input_size: tuple, (row,col)
+    
+    return: numpy array(float64), the binary mask
+    
+    
+    example
+    
+        mask_path = '../mask.png'
+        input_size = (224,224)
+        mask = read_mask_test(mask_path, input_size)  
+    """
 
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     mask_rz = cv2.resize(mask, (size[1],size[0]))
@@ -635,27 +655,26 @@ def read_mask_test(mask_path, input_size):
 
 
 def read_patch_test(img,mask,patch_size=(64,64)):
-
-## extract a patch from a image based on lesion mask
-##     img: numpy array, the lung image
-##     mask: numpy array, the lesion mask
-##     patch_size: tuple, (row,col)
-
-##     return: numpy array(float64), the patch
-
-
-## example
-
-##     image_path = '../img.png'
-##     input_size = (224,224)
-##     img = read_image_test(image_path, input_size)  
-
-##     mask_path = '../mask.png'
-##     input_size = (224,224)
-##     mask = read_mask_test(mask_path, input_size)  
-
-##     patch = read_patch_test(img,mask,patch_size=(64,64))
-
+    """
+    extract a patch from a image based on lesion mask
+        img: numpy array, the lung image
+        mask: numpy array, the lesion mask
+        patch_size: tuple, (row,col)
+    
+        return: numpy array(float64), the patch
+    
+    example
+    
+        image_path = '../img.png'
+        input_size = (224,224)
+        img = read_image_test(image_path, input_size)  
+    
+        mask_path = '../mask.png'
+        input_size = (224,224)
+        mask = read_mask_test(mask_path, input_size)  
+    
+        patch = read_patch_test(img,mask,patch_size=(64,64))
+    """
 
     return extract_patch(img, find_lesion_coordiates(mask), patch_size)
 
@@ -664,39 +683,41 @@ def read_patch_test(img,mask,patch_size=(64,64)):
 
 
 def read_patch_rvs_test(img,mask,patch_size=(64,64)):
-
-## extract a list of patches from a image based on lesion mask
-## arg: img: numpy array, the lung image
-##      mask: numpy array, the lesion mask
-##      patch_size: tuple, (row,col)
-
-## return: a list of numpy array(float64), the patches
-
-## example
-
-##     image_path = '../img.png'
-##     input_size = (224,224)
-##     img = read_image_test(image_path, input_size)  
-
-##     mask_path = '../mask.png'
-##     input_size = (224,224)
-##     mask = read_mask_test(mask_path, input_size)  
-
-##     patches = read_patch_rvs_test(img,mask,patch_size=(64,64)) # return a list of patches
+    """
+    extract a list of patches from a image based on lesion mask
+    arg: img: numpy array, the lung image
+         mask: numpy array, the lesion mask
+         patch_size: tuple, (row,col)
+    
+    return: a list of numpy array(float64), the patches
+    
+    example
+    
+        image_path = '../img.png'
+        input_size = (224,224)
+        img = read_image_test(image_path, input_size)  
+    
+        mask_path = '../mask.png'
+        input_size = (224,224)
+        mask = read_mask_test(mask_path, input_size)  
+    
+        patches = read_patch_rvs_test(img,mask,patch_size=(64,64)) # return a list of patches
+    """
 
     p,n = generate_patch_from_img_random_views(img, find_lesion_coordiates(mask), patch_size)
     return p
 
 
 def gray2RGB(im):
-
-## convert a 2-D numpy array (or a list of 2-D numpy array)to 3-channel numpy array (or a list of 3-channel numpy array)
-## args: im: 2d numpy array of image (row,col)
-## return: im: 3d numpy array of image (row,col,3)
-
-## example:
-#   im = cv2.imread('../im.png','cv2.IMREAD_GRAYSCALE')
-#   im2 = gray2RGB(im)   #im2 (row,col,3)
+    """
+    convert a 2-D numpy array (or a list of 2-D numpy array)to 3-channel numpy array (or a list of 3-channel numpy array)
+    args: im: 2d numpy array of image (row,col)
+    return: im: 3d numpy array of image (row,col,3)
+    
+    example:
+        im = cv2.imread('../im.png','cv2.IMREAD_GRAYSCALE')
+        im2 = gray2RGB(im)   #im2 (row,col,3)
+    """
 
     return np.stack( [np.array(im)] * 3, axis=-1 ) 
 
@@ -769,10 +790,12 @@ def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,s
     return train_img_np,train_label_np,val_img_np,val_label_np
 
 def read_data_kfold(label_path,image_folder_path,input_size,aug_rotate=6,kfold=5,normalize=True,crop_image=False):
-    ## it will split the dataset only according to the patient id in k-fold manner
-    ## for each image, it will do manual augmentation by rotation
-    ## crop is optional and with risk that it may lose some important corners
-    ## most of the parameters are defined in the same way as read_data()
+    """
+    it will split the dataset only according to the patient id in k-fold manner
+    for each image, it will do manual augmentation by rotation
+    crop is optional and with risk that it may lose some important corners
+    most of the parameters are defined in the same way as read_data()
+    """
     
     
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)

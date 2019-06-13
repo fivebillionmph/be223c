@@ -1,7 +1,7 @@
-###########################################################################################
-## Training, testing of UNet-based lung/lesion segmentation model
-## Author: Zhaoqiang Wang (github: aaronzq)
-###########################################################################################
+"""
+Training, testing of UNet-based lung/lesion segmentation model
+Author: Zhaoqiang Wang (github: aaronzq)
+"""
 
 from .util import read_data_unet,normalize
 from .model_cnn.model import createModel_Unet
@@ -124,19 +124,21 @@ def test_seg(label_path, image_path, mask_path, load_path, save_path, img_dim = 
 
 
 def infer_seg(img, model):
-## predict a mask from a lung image
-## Args:  img (2d numpy array): lung images on grayscale
-##        model_path (str): path to the model
-
-# return: mask (2d numpy array): mask with the same size of input image 
-
-## ----------------------------- example ---------------------------------------
-# image_path = '../Dataset/Test-PNG/'
-# model_path = '../save/'
-
-# img = cv2.imread( join(image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
-# mask = infer_seg(img, join(model_path, 'lung_seg.model'))
-## -----------------------------------------------------------------------------
+    """
+    predict a mask from a lung image
+    Args:  img (2d numpy array): lung images on grayscale
+            model_path (str): path to the model
+    
+    return: mask (2d numpy array): mask with the same size of input image 
+    
+    ----------------------------- example ---------------------------------------
+    image_path = '../Dataset/Test-PNG/'
+    model_path = '../save/'
+    
+    img = cv2.imread( join(image_path,('A40PR2002'+'.png')) , cv2.IMREAD_GRAYSCALE)
+    mask = infer_seg(img, join(model_path, 'lung_seg.model'))
+    -----------------------------------------------------------------------------
+    """
 
     output_size = img.shape
 

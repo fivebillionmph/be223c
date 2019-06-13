@@ -1,5 +1,5 @@
 """
-written by James Go
+Author: James Go
 
 this is the main script for running the Flask server
 """

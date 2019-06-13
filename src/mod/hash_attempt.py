@@ -1,3 +1,7 @@
+"""
+Author: Joseph Tsung
+"""
+
 # import necessary libraries
 import os
 import matplotlib.pyplot as plt

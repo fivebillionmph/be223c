@@ -1,5 +1,5 @@
 """
-written by James Go
+Author: James Go
 """
 
 from mod.miniVGG_FFT_hash import train_model
