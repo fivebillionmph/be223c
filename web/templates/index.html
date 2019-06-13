@@ -29,6 +29,7 @@
                     <h4 v-show="!image_point" class="text-danger">Select the node on the canvas</h4>
                     <canvas id="canvas-image-region" v-bind:width="transform_size[0]" v-bind:height="transform_size[1]"></canvas>
                 </div>
+                <h4 v-show="loading" class="text-danger">Loading...</h4>
             </div>
             <div class="col-md-6">
                 <h6>About this project</h6>
@@ -58,7 +59,7 @@
                     <h6>Probability of disease progression</h6>
                     UNET based classifier: <span v-bind:class="{'text-danger': result.probability1 >= 0.5, 'text-success': result.probability1 < 0.5}">${ probString(result.probability1) }</span><br/>
                     VGG16 based patch classifier: <span v-bind:class="{'text-danger': result.probability2 >= 0.5, 'text-success': result.probability2 < 0.5}">${ probString(result.probability2) }</span><br/>
-                    VGG16 based whole image classifier: <span v-bind:class="{'text-danger': result.probability2 >= 0.5, 'text-success': result.probability2 < 0.5}">${ probString(result.probability3) }</span>
+                    VGG16 based whole image classifier: <span v-bind:class="{'text-danger': result.probability3 >= 0.5, 'text-success': result.probability3 < 0.5}">${ probString(result.probability3) }</span>
                 </div>
                 <div class="result-box">
                     <h6>Filtered image</h6>

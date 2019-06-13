@@ -19,6 +19,7 @@ import base64
 from io import BytesIO
 import json
 from os.path import join as opj
+import math
 
 """
 these are hard coded CONSTANTS for locations of models, images and test results
@@ -132,6 +133,8 @@ def route_api_query_image():
     prob1 = g_data["classifier1"].classify(filtered_img)
     prob2 = g_data["classifier2"].classify(patch)
     prob3 = g_data["classifier3"].classify(filtered_img)
+    if math.isnan(prob2):
+        prob2 = None
 
     similarities = g_data["hash_similarity"].query_image(patch)
     similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
