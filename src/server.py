@@ -26,12 +26,16 @@ these are hard coded CONSTANTS for locations of models, images and test results
 MINIVGG_MODEL_PATH = "../data/miniVGG.h5"
 HASH_IMG_DIR = "../data/segs2/patches-training"
 CLASSIFY_MODEL_1 = ("UNET architecture", "../data/lesion_classification.model")
-CLASSIFY_MODEL_2 = ("VGG16 architecture", "../data/model_lung_pro_patch3.h5")
+CLASSIFY_MODEL_2 = ("VGG16 patch architecture", "../data/model_lung_pro_cv_patch.h5")
+CLASSIFY_MODEL_3 = ("VGG16 whole image architecture", "../data/model_lung_pro_cv_image1.h5")
 SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
 LABEL_FILES = ["../data/Test.csv", "../data/Train.csv"]
 CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
-MODEL1_TEST_DIR = "../data/test-model1"
-MODEL2_TEST_DIR = "../data/test-model2"
+MODEL_TEST_DIRS = {
+    1: "../data/test-model1",
+    2: "../data/test-model2",
+    3: "../data/test-model3",
+}
 SERVER_PORT = 8085
 
 app = Flask(__name__, template_folder="../web/templates", static_url_path="/static", static_folder="../web/static")
@@ -49,6 +53,7 @@ def main():
 
     g_data["classifier1"] = Classifier1(CLASSIFY_MODEL_1[1], graph)
     g_data["classifier2"] = Classifier2(CLASSIFY_MODEL_2[1], graph)
+    g_data["classifier3"] = Classifier2(CLASSIFY_MODEL_3[1], graph)
     g_data["segmenter"] = Segmenter(SEGMENTER_MODEL_PATH, graph)
     g_data["hash_similarity"] = ImageSimilarity(HASH_IMG_DIR, preprocess.preprocess, MINIVGG_MODEL_PATH, graph)
     g_data["labels"] = Labels(LABEL_FILES)
@@ -126,6 +131,7 @@ def route_api_query_image():
     filtered_img = preprocess.preprocess(filtered_img)
     prob1 = g_data["classifier1"].classify(filtered_img)
     prob2 = g_data["classifier2"].classify(patch)
+    prob3 = g_data["classifier3"].classify(filtered_img)
 
     similarities = g_data["hash_similarity"].query_image(patch)
     similarities = g_data["labels"].add_labels_to_similarity_list(similarities)
@@ -137,6 +143,7 @@ def route_api_query_image():
         "patch": patch_b64.decode("utf-8"),
         "probability1": prob1,
         "probability2": prob2,
+        "probability3": prob3,
         "similar_images": similarities,
     }
     return jsonify(res)
@@ -170,13 +177,10 @@ def route_modelimg(modelid, filename):
     """
     if not auth_check(request.authorization):
         return auth_fail()
-    if modelid == 1:
-        dire = MODEL1_TEST_DIR
-    elif modelid == 2:
-        dire = MODEL2_TEST_DIR
-    else:
+    if modelid not in MODEL_TEST_DIRS:
         abort(404)
         return
+    dire = MODEL_TEST_DIRS[modelid]
     return send_from_directory(dire, filename)
 
 @app.route('/model/<int:modelid>')
@@ -193,13 +197,10 @@ def route_model(modelid):
     if not auth_check(request.authorization):
         return auth_fail()
     page_data = {}
-    if modelid == 1:
-        dire = MODEL1_TEST_DIR
-    elif modelid == 2:
-        dire = MODEL2_TEST_DIR
-    else:
+    if modelid not in MODEL_TEST_DIRS:
         abort(404)
         return
+    dire = MODEL_TEST_DIRS[modelid]
     with open(opj(dire, "description.html")) as f:
         page_data["description"] = f.read()
     with open(opj(dire, "stats.json")) as f:

@@ -13,8 +13,16 @@
     </div>
     <div>
         <div class="result-box">
-            <h6>Area under the curve</h6>
-            {{ "%0.2f" % data.stats.auc | float }}
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Area under the curve</h6>
+                    {{ "%0.2f" % data.stats.auc | float }}
+                </div>
+                <div class="col-md-4">
+                    <h6>Accuracy</h6>
+                    {{ "%0.2f" % data.stats.acc | float }}
+                </div>
+            </div>
         </div>
         <div class="result-box">
             <h6>Receive operating characteristic</h6>

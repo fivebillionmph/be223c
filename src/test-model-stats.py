@@ -34,6 +34,7 @@ def main():
     fpr, tpr, _ = roc_curve(resp, preds, pos_label=1)
     stats["auc"] = auc(fpr, tpr)
 
+    # plot AUC
     # adapted from https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
     plt.figure()
     plt.plot(fpr, tpr, color='darkorange', lw=lw)
@@ -44,8 +45,8 @@ def main():
     plt.ylabel('True Positive Rate')
     plt.savefig(opj(test_dir, "roc.png"))
 
+    # plot precision / recall
     precision, recall, _ = precision_recall_curve(resp, preds)
-
     plt.figure()
     plt.step(recall, precision, alpha=0.2, color="b")
     plt.xlabel("Recall")
@@ -53,6 +54,14 @@ def main():
     plt.xlim([0.0, 1.05])
     plt.ylim([0.0, 1.05])
     plt.savefig(opj(test_dir, "precision-recall.png"))
+
+    # get accuracy
+    corr = 0
+    for i in range(len(preds)):
+        pred = 1 if preds[i] > 0.5 else 0
+        if pred == resp[i]:
+            corr += 1
+    stats["acc"] = corr / len(preds)
 
     with open(opj(test_dir, "stats.json"), "w") as f:
         f.write(json.dumps(stats))
