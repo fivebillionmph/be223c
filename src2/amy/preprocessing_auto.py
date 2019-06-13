@@ -1,23 +1,73 @@
 # -*- coding: utf-8 -*-
 """
 Author: Amy Cummings
-
-This module provides directory set up, creates png files from 
+Language: python v3.6+
+Required packages: 
+    matplotlib, numpy, pandas, PIL, pydicom, sklearn, skimage
+    
+    
+This script provides directory set up and automated segmentation using dicom files. 
+Note first run creates folders, after which ''' must be removed and the folder module 
+hashed to run automated segmentation. There is a separate script for manual segmentation 
+support (preprocessing_man.py) that can be substituted for this script.
 
 Example:
     $ python preprocessing.py /path/to/directory/
 
+
 Attributes:
     
-    folders: 
+    folders(): creates folders that the program will call in the directory folder. Note 
+    images need to placed into appropriate folders after they are created (see Todo).
+
+     
+    preproc(): extracts information from dicom files to enable conversion of image into
+    Housfield units. This requires a CSV entitled "Master.csv" placed in 
+    /path/to/directory/folder with image names (see Todo). 
+
+        Returns:
+            
+            data: this is an extracted pixel array from the dicom file.
+            
+            slope: this is a value extracted from the dicom file used to calculate
+            Hounsfield units.
+            
+            intercept: this is a value extracted from the dicom file used to calculate
+            Hounsfield units.
+     
+     
+    get_pixels_hu(data, slope, intercept): uses extracted information from dicom to 
+    calculate Hounsfield units that are used for automated segmentation.
     
-    get_pixels_hu: 
+        Args:
+        
+            data: pixel array from dicom image. 
+            
+            slope: value extracted from dicom metadata used to modify pixel array based on
+            Hounsfield units.
+            
+            intercept: value extracted from dicom metadata used to modify pixel array based on
+            Hounsfield units.
+        
+        Returns:
+     
+            img: this is a np array based on Hounsfield units used to create the lungmask.
+    
+    
+    make_lungmask(img): Uses k-means and erosion/dilation to create lungmask and then provide
+    lung segmentation. Segmentation is visualized in pyplot and saved as a png with same filename 
+    as the original dicom file in Seg/.
+    
+        Args:
+        
+            img: np array that is used to create lungmask.
+        
 
 Todo:
+
     1. Run command, which creates folders.
     
-    2. Place original images in 'Images/' folder. Note if automated segmentation
-       is not desired, manually created masks may be placed in 'Preproc/' folder.
+    2. Place original dicom files in 'Images/' folder.
     
     3. Create CSV with names of images files without extension in first column
        and binary outcome variable in second.
@@ -25,9 +75,9 @@ Todo:
        Example:
             A012345,1
             
-    3. Hash folder command and unhash remaining functions, rerun script. Note if 
-       manually created masks are provided, only preproc function should be unhashed.
+    4. Remove ''' in the call function section and hash folder() in line 195.
     
+    5. Rerun script.
     
 """
 
@@ -48,6 +98,18 @@ from PIL import Image
 def folders():
     """ sets up folders that will be used """
     os.makedirs('Images/')
+    os.makedirs('Seg/')
+
+    return
+
+
+def preproc():
+    ds = dicom.dcmread(I, force=True)
+    data = ds.pixel_array
+    slope = ds.RescaleSlope
+    intercept = ds.RescaleIntercept                      
+    
+    return data, slope, intercept
 
 
 def get_pixels_hu(data, slope, intercept):
@@ -115,41 +177,7 @@ def make_lungmask(img, display=False):
         mask = mask + np.where(labels==N,1,0)
     mask = morphology.dilation(mask,np.ones([10,10])) # one last dilation
     final = mask * img
-    
-    return final
-
-""" runs preprocessing, sets paths """
-
-ospath = os.getcwd()
-os.chdir('/path/')    
-
-path = "Images/"
-csv = "Master.csv"
-seg = "Seg/"
-proc = "Preproc/"
-
-
-""" uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images """
-
-df = pd.read_csv(csv, header=0)
-X = df.iloc[0:1,0]
-    
-""" runs loop """
-
-for filename in X:
-    I = path + filename + '.dcm'
-    P = proc + filename + '.dcm'
-    S = seg + filename + '.png'
-    image = [I]
-    process = [P]
-    lungs = [S]
-    ds = dicom.dcmread(I, force=True)
-    data = ds.pixel_array
-    slope = ds.RescaleSlope
-    intercept = ds.RescaleIntercept
-
-
-
+        
     # shows and saves output
 
     plt.imshow(final)
@@ -157,15 +185,32 @@ for filename in X:
     im = im.convert("L")
     im.save(S)
     
-    lungs = final[::2, ::2]
-    ds.PixelData = lungs.tobytes()
-    ds.Rows, ds.Columns = lungs.shape
-    ds.save_as(P)
+    return
 
-# runs code, 
-    
+""" runs preprocessing, sets paths """
+
+ospath = os.getcwd()
+os.chdir(sys.argv[1])    
+
 folders()
-#preproc()
-#makepng()
-#img = get_pixels_hu(data, slope, intercept)
-#final = make_lungmask(img)
+
+'''
+""" uses filenames to define paths, requires filenames in first column without file extensions, assumed dicom images """
+
+csv = "Master.csv"
+path = "Images/"
+seg = "Seg/"
+
+df = pd.read_csv(csv, header=0)
+X = df.iloc[:,0]
+    
+""" runs loop """
+
+for filename in X:
+    I = path + filename + '.dcm'
+    S = seg + filename + '.png'
+
+    preproc()
+    img = get_pixels_hu(data, slope, intercept)
+    make_lungmask(img)
+'''
