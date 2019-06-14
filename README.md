@@ -15,6 +15,7 @@ $ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' C
 ```
 Reference: https://stackoverflow.com/a/20686101/3704042
 - Then go to http://<CONTAINERS_IP>:8085 and run the models through the interface. After submitting an image query, you may have to scroll down on the webpage to see the results.
+- Lung image files that can be used for testing submissions are found in the `/data/segs2/PNG-v2` in the archive submitted to CCLE. 
 
 ## Architecture
 
