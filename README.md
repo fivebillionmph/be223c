@@ -1,9 +1,19 @@
 ## To run with Docker
-- On the AWS server: `docker run project_lung`
+- On the AWS server:
+```bash
+$ docker run project_lung
+```
 This will start a Docker container running the web server listening on port 8085.
 Because the Docker container has its private IP, you will need to look up the IP and proxy into the server to reach it.
-- Find the container's ID by running: `docker ps`
-- Then get the container's private IP with: `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID`
+- Find the container's ID by running:
+```bash
+$ docker ps
+```
+- Then get the container's private IP with:
+```bash
+$ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID
+```
+Reference: https://stackoverflow.com/a/20686101/3704042
 
 ## Directories and file descriptions
 
