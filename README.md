@@ -1,3 +1,6 @@
+## GitHub repo
+The repo is available at: https://github.com/fivebillionmph/be223c
+
 ## To run with Docker
 - On the AWS server:
 ```bash
@@ -104,5 +107,3 @@ Three deep learning models were trained on the pre-treatment images to classify 
 A content based retrieval based on miniVGG and image similarity hashing was also trained so similar lesions can be returned.
 
 An automatic lung segmentation model was also created so that users do not need to segment the lungs out of surrounding tissue themselves.
-
-The repo is available at: https://github.com/fivebillionmph/be223c
