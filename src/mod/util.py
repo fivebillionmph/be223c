@@ -58,9 +58,8 @@ def rotate(image, angle, center=None, scale=1.0):
     return rotated
 
 def rotate_bound(image, angle):
-    """ grab the dimensions of the image and then determine the """
+    """ grab the dimensions of the image and then determine the center """
 
-    # center
     (h, w) = image.shape[:2]
     (cX, cY) = (w // 2, h // 2)
 
@@ -281,7 +280,6 @@ def generate_patch_from_img_random_views(img,coor,patch_size):
 ########################### export the following functions ################################
 ###########################################################################################
 def read_data_unet(label_path,image_folder_path,mask_folder_path,input_size,split_ratio=0.2,aug_rotate=6):
-
     """
     read data for proposed unet-based method
     No option for K-Fold; No option for RBG/gra output (one channel in default); 

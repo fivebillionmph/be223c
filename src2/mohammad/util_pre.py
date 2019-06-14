@@ -1,3 +1,10 @@
+"""
+Utility function for CNN models
+Author: Zhaoqiang Wang (github: aaronzq)
+
+similar to script at /src/mod/util.py but slightly modified for use by Mohammad
+"""
+
 ## utility function for cnn
 import pandas as pd
 import numpy as np
@@ -12,18 +19,18 @@ import random
 random.seed(7)
 
 def normalize(img):
-    # Normalize the images in the range of 0 to 1 (converted into float64)
+    """ Normalize the images in the range of 0 to 1 (converted into float64) """
 
     return (img-np.min(img))/(np.max(img)-np.min(img))
     # return img / np.max(img)
 
 def normalize_u8(img):
-    # Normalize the images in the range of 0 to 255 (converted into uint8)
+    """ Normalize the images in the range of 0 to 255 (converted into uint8) """
 
     return np.uint8( 255*normalize(img) )    
 
 def bbox(img):
-    # find the bounding box of the lung in ct slices
+    """ find the bounding box of the lung in ct slices """
     
     rows = np.any(img, axis=1)
     cols = np.any(img, axis=0)
@@ -33,7 +40,8 @@ def bbox(img):
     return rmin, rmax, cmin, cmax
 
 def rotate(image, angle, center=None, scale=1.0):
-    # grab the dimensions of the image
+    """ grab the dimensions of the image """
+
     (h, w) = image.shape[:2]
 
     # if the center is None, initialize it as the center of
@@ -49,8 +57,8 @@ def rotate(image, angle, center=None, scale=1.0):
     return rotated
 
 def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
+    """ grab the dimensions of the image and then determine the center """
+
     (h, w) = image.shape[:2]
     (cX, cY) = (w // 2, h // 2)
 
@@ -73,7 +81,7 @@ def rotate_bound(image, angle):
     return cv2.warpAffine(image, M, (nW, nH))
 
 def read_label(csv_file):
-    # read image name and store in list
+    """ read image name and store in list """
 
     label_csv = pd.DataFrame( pd.read_csv(csv_file) )
 
@@ -92,6 +100,14 @@ def read_label(csv_file):
     return file_name_list,prog_list,pid_list,pid_file_dict
 
 def read_image(file_name_list, image_src_path, size, norm=True, crop=False):
+    """
+    read all images and masks according to csvfile 
+    
+    Returns: 
+          image_list: (list) list of numpy arrays of image with specified size
+          mask_list: (list) list of numpy arrays of mask with specified size 
+    """
+
     image_list = list()
 
     for f in file_name_list:
@@ -119,6 +135,23 @@ def read_image(file_name_list, image_src_path, size, norm=True, crop=False):
     return image_list
 
 def read_data(label_path,image_folder_path,input_size,split_ratio,aug_rotate=6,split_by_id=True,normalize=True,crop_image=False):
+    """
+    read data for proposed unet-based method
+    No option for K-Fold; No option for RBG/gra output (one channel in default); 
+    Split on patient ID; Augmentation: rotation(crop corners)
+    
+    Args: label_path: string of path to the csv file
+          image_folder_path: string of path to the image folder
+          mask_folder_path: string of path to the mask folder
+          input_size: tuple of expected input size for model, output size for this function (row,col)
+          split_ratio: float, split ratio between training and validation dataset
+          aug_rotate: int, how many times of augmentation
+    
+    return:
+         numpy array: train_img (N x row x col x 1), train_mask (N x row x col x 1), train_label (N,)
+         numpy array: val_img (N x row x col x 1), val_mask (N x row x col x 1), val_label (N,)
+    """
+
     file_name_list,prog_list,pid_list,pid_file_dict = read_label(label_path)
     #print('Labels loaded: {} positive,{} negatve.'.format( sum( np.array(prog_list)==1 ), len(prog_list)-sum( np.array(prog_list)==1 )))
     

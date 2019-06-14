@@ -1,3 +1,7 @@
+/*
+    Author: James Go
+*/
+
 (function() {
 
 var app = new Vue({

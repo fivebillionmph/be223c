@@ -14,18 +14,6 @@ segmentation (preprocessing_auto.py) that can be substituted for this script.
 
 Example:
     $ python preprocessing_man.py /path/to/directory/folder
-
-
-Attributes:
-    
-    folders(): creates folders that the program will call in the directory folder. Note 
-    images need to placed into appropriate folders after they are created (see Todo).
-    
-    makepng(): creates pngs from dicoms that can be used for segmentation. Saved in PNG/.
-    
-    manualseg(): uses cv2.bitwise_and to extract area of interest from png using mask. 
-    Segmented pngs are saved in Seg/.
-    
     
 Todo:
 
@@ -61,6 +49,11 @@ import cv2
 # sets up folders that will be used - only to be run once then hashed
 
 def folders():
+    """
+    creates folders that the program will call in the directory folder. Note 
+    images need to placed into appropriate folders after they are created (see Todo at beginning of script).
+    """
+
     os.makedirs('Images/')    
     os.makedirs('PNG/')
     os.makedirs('Mask/')
@@ -74,6 +67,10 @@ def folders():
 # makepng module
 
 def makepng():
+    """
+    creates pngs from dicoms that can be used for segmentation. Saved in PNG/.
+    """
+
     ds = dicom.dcmread(I[i], force=True)
     data = ds.pixel_array
     im = Image.fromarray(data/8)
@@ -85,6 +82,11 @@ def makepng():
 # manual segmentation module
 
 def manualseg():
+    """
+    uses cv2.bitwise_and to extract area of interest from png using mask. 
+    Segmented pngs are saved in Seg/.
+    """
+
     img = cv2.imread(P[i])
     mask = cv2.imread(M[i],0)
     seg = cv2.bitwise_and(img,img,mask=mask)

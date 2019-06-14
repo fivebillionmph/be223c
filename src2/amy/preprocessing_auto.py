@@ -14,55 +14,6 @@ support (preprocessing_man.py) that can be substituted for this script.
 Example:
     $ python preprocessing.py /path/to/directory/
 
-
-Attributes:
-    
-    folders(): creates folders that the program will call in the directory folder. Note 
-    images need to placed into appropriate folders after they are created (see Todo).
-
-     
-    preproc(): extracts information from dicom files to enable conversion of image into
-    Housfield units. This requires a CSV entitled "Master.csv" placed in 
-    /path/to/directory/folder with image names (see Todo). 
-
-        Returns:
-            
-            data: this is an extracted pixel array from the dicom file.
-            
-            slope: this is a value extracted from the dicom file used to calculate
-            Hounsfield units.
-            
-            intercept: this is a value extracted from the dicom file used to calculate
-            Hounsfield units.
-     
-     
-    get_pixels_hu(data, slope, intercept): uses extracted information from dicom to 
-    calculate Hounsfield units that are used for automated segmentation.
-    
-        Args:
-        
-            data: pixel array from dicom image. 
-            
-            slope: value extracted from dicom metadata used to modify pixel array based on
-            Hounsfield units.
-            
-            intercept: value extracted from dicom metadata used to modify pixel array based on
-            Hounsfield units.
-        
-        Returns:
-     
-            img: this is a np array based on Hounsfield units used to create the lungmask.
-    
-    
-    make_lungmask(img): Uses k-means and erosion/dilation to create lungmask and then provide
-    lung segmentation. Segmentation is visualized in pyplot and saved as a png with same filename 
-    as the original dicom file in Seg/.
-    
-        Args:
-        
-            img: np array that is used to create lungmask.
-        
-
 Todo:
 
     1. Run command, which creates folders.
@@ -96,7 +47,11 @@ from PIL import Image
 
 
 def folders():
-    """ sets up folders that will be used """
+    """
+    creates folders that the program will call in the directory folder. Note 
+    images need to placed into appropriate folders after they are created (see Todo at the beginning of the script).
+    """
+
     os.makedirs('Images/')
     os.makedirs('Seg/')
 
@@ -104,6 +59,22 @@ def folders():
 
 
 def preproc():
+    """
+    extracts information from dicom files to enable conversion of image into
+    Housfield units. This requires a CSV entitled "Master.csv" placed in 
+    /path/to/directory/folder with image names (see Todo at the beginning of the script). 
+
+    Returns:
+        
+        data: this is an extracted pixel array from the dicom file.
+        
+        slope: this is a value extracted from the dicom file used to calculate
+        Hounsfield units.
+        
+        intercept: this is a value extracted from the dicom file used to calculate
+        Hounsfield units.
+    """
+
     ds = dicom.dcmread(I, force=True)
     data = ds.pixel_array
     slope = ds.RescaleSlope
@@ -113,7 +84,23 @@ def preproc():
 
 
 def get_pixels_hu(data, slope, intercept):
-    """ uses metadata from dicom file to convert pixels to hounsfield units """
+    """
+    uses extracted information from dicom to 
+    calculate Hounsfield units that are used for automated segmentation.
+    
+    Args:
+        data: pixel array from dicom image. 
+        
+        slope: value extracted from dicom metadata used to modify pixel array based on
+        Hounsfield units.
+        
+        intercept: value extracted from dicom metadata used to modify pixel array based on
+        Hounsfield units.
+    
+    Returns:
+        img: this is a np array based on Hounsfield units used to create the lungmask.
+    """
+
     image = data.astype(np.int16)
     image[image == -2000] = 0
     intercept = intercept
@@ -130,7 +117,14 @@ def get_pixels_hu(data, slope, intercept):
 
 
 def make_lungmask(img, display=False):
-    """ uses hu values to make lungmask and perform segmentation """
+    """
+    Uses k-means and erosion/dilation to create lungmask and then provide
+    lung segmentation. Segmentation is visualized in pyplot and saved as a png with same filename 
+    as the original dicom file in Seg/.
+    
+    Args:
+        img: np array that is used to create lungmask.
+    """
     row_size= img.shape[0]
     col_size = img.shape[1]
     
