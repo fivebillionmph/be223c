@@ -31,7 +31,7 @@ CLASSIFY_MODEL_2 = ("VGG16 patch architecture", "../data/model_lung_pro_cv_patch
 CLASSIFY_MODEL_3 = ("VGG16 whole image architecture", "../data/model_lung_pro_cv_image1.h5")
 SEGMENTER_MODEL_PATH = "../data/lung_seg.model"
 LABEL_FILES = ["../data/Test.csv", "../data/Train.csv"]
-CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
+#CLASSIFY_TEST_RESULTS_FILE = ["../data/Test-result.csv"]
 MODEL_TEST_DIRS = {
     1: "../data/test-model1",
     2: "../data/test-model2",
