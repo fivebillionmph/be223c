@@ -1,5 +1,6 @@
 """
 Author: Joseph Tsung
+A first attempt at hashing before the miniVGG model
 """
 
 # import necessary libraries
