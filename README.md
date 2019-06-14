@@ -14,7 +14,7 @@ $ docker ps
 $ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID
 ```
 Reference: https://stackoverflow.com/a/20686101/3704042
-- Then go to http://<CONTAINERS_IP>:8085 and run the models through the interface. After submitting an image query, you may have to scroll down on the webpage to see the results (the interface is not well designed).
+- Then go to http://<CONTAINERS_IP>:8085 and run the models through the interface. After submitting an image query, you may have to scroll down on the webpage to see the results.
 
 ## Directories and file descriptions
 
